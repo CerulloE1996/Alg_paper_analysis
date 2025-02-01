@@ -38,9 +38,9 @@ times <- c()
 
 {
   ##
-  pilot_study_opt_N_chunks_list$n_chunks_vec_N_500   <-  c(1) # c(1, 2, 4,  5,   10) # ~ 3 mins
-  pilot_study_opt_N_chunks_list$n_chunks_vec_N_1000  <-  c(1) #  c(1, 2, 4,  5,   10) # ~ 3 mins
-  pilot_study_opt_N_chunks_list$n_chunks_vec_N_2500  <-  c(1) # c(1, 2, 4,  5,   10,  20,  25) # ~ 4 mins
+  pilot_study_opt_N_chunks_list$n_chunks_vec_N_500   <-  c(1, 2, 4,  5,   10) # ~ 3 mins
+  pilot_study_opt_N_chunks_list$n_chunks_vec_N_1000  <-  c(1, 2, 4,  5,   10) # ~ 3 mins
+  pilot_study_opt_N_chunks_list$n_chunks_vec_N_2500  <-  c(1, 2, 4,  5,   10,  20,  25) # ~ 4 mins
   pilot_study_opt_N_chunks_list$n_chunks_vec_N_5000  <- c(1, 2, 4,  5,   10,  20,  25,  40,  50) # ~ 5 mins
   pilot_study_opt_N_chunks_list$n_chunks_vec_N_12500 <- c(1, 5, 10, 20, 25,  40,  50,  100, 125,  200,  250) # ~ 6 mins
   pilot_study_opt_N_chunks_list$n_chunks_vec_N_25000 <- c(1, 5, 10, 20, 25,  40,  50,  100, 125,  200,  250, 400, 500) # ~ 7 mins
@@ -68,14 +68,64 @@ n_runs <- pilot_study_opt_N_chunks_list$n_runs
 
 ## Make array to store results:
 times_array <- array(dim = c(length(N_vec), n_max_chunk_combos, n_runs, n_thread_total_combos))
-dimnames(times_array) <- c("N_index", "n_chunks_index", "run_number", "n_threads_index")
+str(times_array)
+dimnames(times_array) <- list(N = c(500, 1000, 2500, 5000, 12500, 25000),
+                              n_chunks_index = seq(from = 1, to = n_max_chunk_combos, by = 1),
+                              run_number = seq(from = 1, to = n_runs, by = 1),
+                              n_threads_index =   pilot_study_opt_N_chunks_list$n_threads_vec) 
+##   "n_chunks_index", "run_number", "n_threads_index")
 
+## Set key variables:
+n_class <- global_list$Model_settings_list$n_class
+n_tests <- global_list$Model_settings_list$n_tests
+n_params_main <- global_list$Model_settings_list$n_params_main
+n_corrs <-  global_list$Model_settings_list$n_corrs
+n_covariates_total <-  global_list$Model_settings_list$n_covariates_total
+n_nuisance_to_track <- 10 ## set to small number 
+##
+pilot_study_opt_N_chunks_list$manual_gradients <- TRUE ## Using manual-gradient function !! (AD doesn't have "chunking")
+## Fixed # of * burnin * chains:
+n_chains_burnin <- 8
+n_burnin <- 500
+##
+sample_nuisance <- FALSE
+partitioned_HMC <- FALSE
+diffusion_HMC <- FALSE
+Model_type <- "LC_MVP"
+force_autodiff <- force_PartialLog <- FALSE
+multi_attempts <- FALSE
+metric_shape_main <- "dense"
+##
 
-
-
-for (dataset_index in start_index:length(pilot_study_opt_N_chunks_list$N_vec[!is.na(pilot_study_opt_N_chunks_list$N_vec)]))  {
+for (df_index in start_index:length(pilot_study_opt_N_chunks_list$N_vec[!is.na(pilot_study_opt_N_chunks_list$N_vec)]))  {
   
-        N <- pilot_study_opt_N_chunks_list$N_vec[dataset_index]
+        ## Get Rcpp / C++ lists:
+        Model_args_as_Rcpp_List <- BayesMVP_model_obj$init_object$Model_args_as_Rcpp_List
+        EHMC_args_as_Rcpp_List <- init_EHMC_args_as_Rcpp_List(diffusion_HMC = diffusion_HMC)
+        ## Edit entries to ensure don't get divergences - but also ensure suitable L chosen:
+        EHMC_args_as_Rcpp_List$eps_main <- 0.0001
+        ## Use path length of 16:
+        L_main <- 16
+        EHMC_args_as_Rcpp_List$tau_main <-     L_main * EHMC_args_as_Rcpp_List$eps_main 
+        ## Metric Rcpp / C++ list::
+        EHMC_Metric_as_Rcpp_List <- init_EHMC_Metric_as_Rcpp_List(   n_params_main = n_params_main, 
+                                                                     n_nuisance = n_nuisance, 
+                                                                     metric_shape_main = metric_shape_main)  
+  
+        N <- pilot_study_opt_N_chunks_list$N_vec[df_index]
+        Model_args_as_Rcpp_List$N <- N
+        ##
+        for (c in 1:n_class) {
+          for (t in 1:n_tests) {
+            Model_args_as_Rcpp_List$Model_args_2_later_vecs_of_mats_double[[1]][[c]][[t]] <- matrix(1, nrow = N, ncol = 1)
+          }
+        }
+        ##
+        n_nuisance <- N * n_tests
+        Model_args_as_Rcpp_List$n_nuisance <- n_nuisance
+        ## Print:
+        print(paste("N = ", N))
+        print(paste("n_nuisance = ", n_nuisance))
         
         if (N == 500) { 
           n_chunks_vec <- pilot_study_opt_N_chunks_list$n_chunks_vec_N_500
@@ -101,31 +151,11 @@ for (dataset_index in start_index:length(pilot_study_opt_N_chunks_list$N_vec[!is
           n_chunks_vec <- pilot_study_opt_N_chunks_list$n_chunks_vec_N_25000
           N_iter <- 8 
         }
-        
-        # ## Set key variables:
-        n_class <- global_list$Model_settings_list$n_class
-        n_tests <- global_list$Model_settings_list$n_tests
-        n_params_main <- global_list$Model_settings_list$n_params_main
-        n_corrs <-  global_list$Model_settings_list$n_corrs
-        n_covariates_total <-  global_list$Model_settings_list$n_covariates_total
         ##
-        pilot_study_opt_N_chunks_list$manual_gradients <- TRUE ## Using manual-gradient function !! (AD doesn't have "chunking")
-        ## Fixed # of * burnin * chains:
-        n_chains_burnin <- 8
         n_iter <- N_iter
-        n_burnin <- 500
-        ##
-        n_nuisance_to_track <- 10 ## set to small number 
         ##
         
-        
-        sample_nuisance <- FALSE
-        partitioned_HMC <- FALSE
-        diffusion_HMC <- FALSE
-        Model_type <- "LC_MVP"
-        force_autodiff <- force_PartialLog <- FALSE
-        multi_attempts <- FALSE
-        metric_shape_main <- "dense"
+
   
   for (kkk in 1:length(n_chunks_vec))  {
     
@@ -134,7 +164,8 @@ for (dataset_index in start_index:length(pilot_study_opt_N_chunks_list$N_vec[!is
     
     ## Set the number of chunks to use in model_args_list:
     num_chunks <- n_chunks_vec[kkk]
-    BayesMVP_pilot_study_list$model_args_list$num_chunks <- num_chunks
+    ## BayesMVP_pilot_study_list$model_args_list$num_chunks <- num_chunks
+    Model_args_as_Rcpp_List$Model_args_ints[4] <- num_chunks
     ## Using manual-gradient model obj:
     BayesMVP_model_obj <- BayesMVP_LC_MVP_model_using_manual_grad_obj
     
@@ -158,7 +189,7 @@ for (dataset_index in start_index:length(pilot_study_opt_N_chunks_list$N_vec[!is
  
                       theta_main_vectors_all_chains_input_from_R <- matrix(0.01, ncol = n_chains_sampling, nrow = n_params_main)
                       ## Inits for main:
-                      n_nuisance <- N * n_tests
+                     
                       theta_main_vectors_all_chains_input_from_R[ (n_corrs + 1):(n_corrs + n_covariates_total/2) , ] <- rep(-1, n_covariates_total/2)
                       theta_main_vectors_all_chains_input_from_R[ (n_corrs + 1 + n_covariates_total/2):(n_corrs + n_covariates_total), ] <- rep(1, n_covariates_total/2)
                       theta_main_vectors_all_chains_input_from_R[ n_params_main ] =  -0.6931472  # this is equiv to starting val of p = 0.20 -  since: 0.5 * (tanh( -0.6931472) + 1)  = -0.6931472
@@ -174,19 +205,9 @@ for (dataset_index in start_index:length(pilot_study_opt_N_chunks_list$N_vec[!is
                       y_binary_list <- global_list$data_sim_outs$y_binary_list
                       df_index <- which(pilot_study_opt_N_chunks_list$N_vec == N)
                       y <- y_binary_list[[df_index]]
-                      ## Get Rcpp / C++ lists:
-                      Model_args_as_Rcpp_List <- BayesMVP_model_obj$init_object$Model_args_as_Rcpp_List
-                      EHMC_args_as_Rcpp_List <- init_EHMC_args_as_Rcpp_List(diffusion_HMC = diffusion_HMC)
-                      ## Edit entries to ensure don't get divergences - but also ensure suitable L chosen:
-                      EHMC_args_as_Rcpp_List$eps_main <- 0.0001
-                      ## Use path length of 32:
-                      L_main <- 32
-                      EHMC_args_as_Rcpp_List$tau_main <-     L_main * EHMC_args_as_Rcpp_List$eps_main 
-                      ## Metric Rcpp / C++ list::
-                      EHMC_Metric_as_Rcpp_List <- init_EHMC_Metric_as_Rcpp_List(   n_params_main = n_params_main, 
-                                                                                   n_nuisance = n_nuisance, 
-                                                                                   metric_shape_main = metric_shape_main)  
-                      
+                      ##
+                      str(Model_args_as_Rcpp_List$Model_args_2_later_vecs_of_mats_double)
+                      ##
                       ### Call C++ parallel sampling function * directly * (skip costly burn-in phase + out of scope for this paper)
                       RcppParallel::setThreadOptions(numThreads = n_chains_sampling);
                       ##
@@ -221,14 +242,14 @@ for (dataset_index in start_index:length(pilot_study_opt_N_chunks_list$N_vec[!is
               
               print(paste("N = ", N))
               comment(print(iii))
-              times_array[dataset_index, kkk, iii, ]  <- print(round(dput(times), 3))
+              times_array[df_index, kkk, iii, ]  <- print(round(dput(times), 3))
             }
             
             {
               print(paste("N = ", N))
               print(paste("num_chunks = ", num_chunks))
               print(paste("n_threads = ", n_threads))
-              print( round((times_array[dataset_index, kkk,,]), 2))
+              print( round((times_array[df_index, kkk,,]), 2))
               #  print( round(colMeans(times_array), 2))
               print(signif(times/n_threads, 3))
             } 
@@ -243,7 +264,9 @@ for (dataset_index in start_index:length(pilot_study_opt_N_chunks_list$N_vec[!is
                                                                 "1_appendix_pilot_studies",
                                                                 "ps_1_optimizing_N_chunks",
                                                                 "outputs")
-        file_name <- paste0("determining_optimal_N_chunks_ps", "_N_", N)
+        file_name <- paste0("determining_optimal_N_chunks_ps", 
+                            "_N_", N, 
+                            "n_runs_", pilot_study_opt_N_chunks_list$n_runs)
         if (pilot_study_opt_N_chunks_list$device == "Laptop") { 
            file_name <- paste0("Laptop_", file_name)
         } else { 
@@ -252,7 +275,7 @@ for (dataset_index in start_index:length(pilot_study_opt_N_chunks_list$N_vec[!is
      
         file_path <- file.path(pilot_study_opt_N_chunks_list$output_path, file_name)
         
-        saveRDS(object = times_array[dataset_index,,,], file = file_path)
+        saveRDS(object = times_array[df_index,,,], file = file_path)
   }
   
   try({  
