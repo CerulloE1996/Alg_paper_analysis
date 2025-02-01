@@ -174,6 +174,7 @@ for (df_index in start_index:length(pilot_study_opt_N_chunks_list$N_vec[!is.na(p
                       print(paste("n_threads = ", n_threads))
                       print(paste("n_chains_sampling = ", n_chains_sampling))
  
+                      print(paste("n_params_main = ", ))
                       theta_main_vectors_all_chains_input_from_R <- matrix(0.01, ncol = n_chains_sampling, nrow = n_params_main)
                       ## Inits for main:
                      
@@ -253,9 +254,9 @@ for (df_index in start_index:length(pilot_study_opt_N_chunks_list$N_vec[!is.na(p
         #                                                         "1_appendix_pilot_studies",
         #                                                         "ps_1_optimizing_N_chunks",
         #                                                         "outputs")
-        file_name <- paste0("determining_optimal_N_chunks_ps", 
-                            "_N_", N, 
-                            "n_runs_", pilot_study_opt_N_chunks_list$n_runs)
+        file_name <- paste0("determining_optimal_N_chunks_ps", "_",
+                            "N", N, "_",
+                            "n_runs", pilot_study_opt_N_chunks_list$n_runs)
         if (pilot_study_opt_N_chunks_list$device == "Laptop") { 
            file_name <- paste0("Laptop_", file_name)
         } else { 
