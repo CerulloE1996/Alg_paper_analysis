@@ -17,13 +17,13 @@ R_fn_plot_ps_N_chunks_make_ggplot_1 <- function(tibble_all_runs_avg,
           ## 
           tibble_all_runs_avg_initial_subset_HPC <-    dplyr::filter(tibble_all_runs_avg, device ==  "HPC")
           tibble_all_runs_avg_initial_subset_Laptop <- dplyr::filter(tibble_all_runs_avg, device ==  "Laptop")
-          ##
-          tibble_all_runs_avg_subset_N_500_HPC    <- dplyr::filter(tibble_all_runs_avg_initial_subset_HPC, N == 500)
-          tibble_all_runs_avg_subset_N_1000_HPC   <- dplyr::filter(tibble_all_runs_avg_initial_subset_HPC, N == 1000)
-          tibble_all_runs_avg_subset_N_2500_HPC   <- dplyr::filter(tibble_all_runs_avg_initial_subset_HPC, N == 2500)
-          tibble_all_runs_avg_subset_N_5000_HPC   <- dplyr::filter(tibble_all_runs_avg_initial_subset_HPC, N == 5000)
-          tibble_all_runs_avg_subset_N_12500_HPC  <- dplyr::filter(tibble_all_runs_avg_initial_subset_HPC, N == 12500)
-          tibble_all_runs_avg_subset_N_25000_HPC  <- dplyr::filter(tibble_all_runs_avg_initial_subset_HPC, N == 25000)
+          # ##
+          # tibble_all_runs_avg_subset_N_500_HPC    <- dplyr::filter(tibble_all_runs_avg_initial_subset_HPC, N == 500)
+          # tibble_all_runs_avg_subset_N_1000_HPC   <- dplyr::filter(tibble_all_runs_avg_initial_subset_HPC, N == 1000)
+          # tibble_all_runs_avg_subset_N_2500_HPC   <- dplyr::filter(tibble_all_runs_avg_initial_subset_HPC, N == 2500)
+          # tibble_all_runs_avg_subset_N_5000_HPC   <- dplyr::filter(tibble_all_runs_avg_initial_subset_HPC, N == 5000)
+          # tibble_all_runs_avg_subset_N_12500_HPC  <- dplyr::filter(tibble_all_runs_avg_initial_subset_HPC, N == 12500)
+          # tibble_all_runs_avg_subset_N_25000_HPC  <- dplyr::filter(tibble_all_runs_avg_initial_subset_HPC, N == 25000)
           ##
           { ##  -------- plot 1: panel (a) ---- Panel for N = {500, 1000, 2500}
                 print(paste("Plot for HPC data"))
@@ -31,7 +31,8 @@ R_fn_plot_ps_N_chunks_make_ggplot_1 <- function(tibble_all_runs_avg,
                                                                                      mapping = aes(x =  (n_chunks),
                                                                                                    y = eff,
                                                                                                    colour =  n_threads,
-                                                                                                   group =   n_threads,
+                                                                                                   group  =  n_threads,
+                                                                                                   shape = device
                                                                                      ),
                 ) +
                   geom_point(size = 4) +
@@ -61,7 +62,8 @@ R_fn_plot_ps_N_chunks_make_ggplot_1 <- function(tibble_all_runs_avg,
                                                                                       mapping = aes(x =  (n_chunks),
                                                                                                     y = eff,
                                                                                                     colour =  n_threads,
-                                                                                                    group =  n_threads
+                                                                                                    group  =  n_threads,
+                                                                                                    shape = device 
                                                                                       ),
                 ) +
                   geom_point(size = 4) + 
@@ -87,7 +89,6 @@ R_fn_plot_ps_N_chunks_make_ggplot_1 <- function(tibble_all_runs_avg,
           
           
            plot <-  plot_panel_HPC + plot_panel_Laptop + plot_layout(ncol = 1)
-           ## View plot:
            plot
           
           
@@ -114,9 +115,8 @@ R_fn_plot_ps_N_chunks_make_ggplot_1 <- function(tibble_all_runs_avg,
           
           
           
-          return(list(df_subset_at_chosen_n_threads = df_subset_at_chosen_n_threads,
-                      tibble_all_runs_avg_subset_1 = tibble_all_runs_avg_subset_1,
-                      tibble_all_runs_avg_subset_2 = tibble_all_runs_avg_subset_2,
+          return(list( tibble_all_runs_avg_initial_subset_HPC = tibble_all_runs_avg_initial_subset_HPC,
+                       tibble_all_runs_avg_initial_subset_Laptop = tibble_all_runs_avg_initial_subset_Laptop,
                       plot = plot))
   
 }

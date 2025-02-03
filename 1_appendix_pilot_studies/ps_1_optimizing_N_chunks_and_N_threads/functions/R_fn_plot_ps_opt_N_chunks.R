@@ -158,7 +158,7 @@ R_fn_ps_opt_N_chunks_plots <- function(     tibble_all_runs,
                                                              plot_PPI = 400,
                                                              output_path =     pilot_study_opt_N_chunks_list$output_path )
       ##
-      plot_panel_1_opt_N_chunks_at_the_every_tested_thread_count  <- plot_1_outs$plot_panel
+      plot_panel_1_opt_N_chunks_at_the_every_tested_thread_count  <- plot_1_outs$plot
       plot_panel_1_opt_N_chunks_at_the_every_tested_thread_count
  
       
@@ -191,6 +191,8 @@ R_fn_ps_opt_N_chunks_plots <- function(     tibble_all_runs,
       }
  
       
+      chosen_n_threads_HPC <- 64
+      chosen_n_threads_Laptop <- 16
       
       ##  ----------------- Make + save "plot 2"  ------------------------------------------------------------------------------------------------------------------
       ## NOTE: This is a plot of N_{chunks} vs. time (in sec) for all N at the ** CHOSEN ** (i.e., the "optimal") # OF THREADS for each device 
@@ -208,21 +210,21 @@ R_fn_ps_opt_N_chunks_plots <- function(     tibble_all_runs,
       df_subset_at_chosen_n_threads  <- plot_2_outs$df_subset_at_chosen_n_threads
       tibble_all_runs_avg_subset_1  <-  plot_2_outs$tibble_all_runs_avg_subset_1
       tibble_all_runs_avg_subset_2  <-  plot_2_outs$tibble_all_runs_avg_subset_2
-      plot_panel_2_opt_N_chunks_at_the_opt_thread_count  <- plot_2_outs$plot_panel
+      plot_panel_2_opt_N_chunks_at_the_opt_thread_count  <- plot_2_outs$plot
       plot_panel_2_opt_N_chunks_at_the_opt_thread_count
       
   
-      
-  return(list( ## Outputs for part 1:
-               tibble_1_showing_optimal_n_chunks_per_N_for_HPC = tibble_1_showing_optimal_n_chunks_per_N_for_HPC,
-               tibble_1_showing_optimal_n_chunks_per_N_for_Laptop = tibble_1_showing_optimal_n_chunks_per_N_for_Laptop,
-               plot_panel_1_opt_N_chunks_at_the_every_tested_thread_count = plot_panel_1_opt_N_chunks_at_the_every_tested_thread_count, 
-               ## Outputs for part 2:
-               tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_HPC = tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_HPC,
-               tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_Laptop = tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_Laptop,
-               plot_panel_2_opt_N_chunks_at_the_opt_thread_count = plot_panel_2_opt_N_chunks_at_the_opt_thread_count))
-              
-             
+          
+      return(list( ## Outputs for part 1:
+                   tibble_1_showing_optimal_n_chunks_per_N_for_HPC = tibble_1_showing_optimal_n_chunks_per_N_for_HPC,
+                   tibble_1_showing_optimal_n_chunks_per_N_for_Laptop = tibble_1_showing_optimal_n_chunks_per_N_for_Laptop,
+                   plot_panel_1_opt_N_chunks_at_the_every_tested_thread_count = plot_panel_1_opt_N_chunks_at_the_every_tested_thread_count, 
+                   ## Outputs for part 2:
+                   tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_HPC = tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_HPC,
+                   tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_Laptop = tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_Laptop,
+                   plot_panel_2_opt_N_chunks_at_the_opt_thread_count = plot_panel_2_opt_N_chunks_at_the_opt_thread_count))
+                  
+                 
   
  
 

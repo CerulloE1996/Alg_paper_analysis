@@ -101,11 +101,8 @@ R_fn_plot_ps_N_chunks_make_ggplot_2 <- function(tibble_all_runs_avg,
           
           
           
-           plot_panel <- plot_N_chunks_pilot_study_HPC_plot_1_N_500_1000_2500 + 
-            plot_N_chunks_pilot_study_HPC_plot_1_N_5000_12500_25000 + 
-            plot_layout(ncol = 1)
-          ## View plot:
-          plot_panel
+           plot <- plot_N_chunks_pilot_study_HPC_plot_1_N_500_1000_2500 +  plot_N_chunks_pilot_study_HPC_plot_1_N_5000_12500_25000 + plot_layout(ncol = 1)
+           plot
           
           
           ## save plot:
@@ -123,7 +120,7 @@ R_fn_plot_ps_N_chunks_make_ggplot_2 <- function(tibble_all_runs_avg,
                 height =  plot_height, 
                 res = plot_PPI)
             ##
-            plot_panel
+            plot
             ##
             dev.off()
             ##
@@ -134,7 +131,7 @@ R_fn_plot_ps_N_chunks_make_ggplot_2 <- function(tibble_all_runs_avg,
           return(list(df_subset_at_chosen_n_threads = df_subset_at_chosen_n_threads,
                       tibble_all_runs_avg_subset_1 = tibble_all_runs_avg_subset_1,
                       tibble_all_runs_avg_subset_2 = tibble_all_runs_avg_subset_2,
-                      plot_panel = plot_panel))
+                      plot = plot))
   
 }
 
