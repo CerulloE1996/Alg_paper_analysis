@@ -62,41 +62,43 @@ R_fn_plot_ps_N_chunks_make_ggplot_2 <- function(tibble_all_runs_avg,
           
           
           
-          { ## -------- plot 2: panel (b) ----  Panel for N = {5000, 12500, 25000}
-            plot_N_chunks_pilot_study_HPC_plot_1_N_5000_12500_25000 <-   ggplot(  tibble_all_runs_avg_subset_2,  
-                                                                                  mapping = aes(x =  (n_chunks),
-                                                                                                y = time_mean,
-                                                                                                # y = Time / N_iter,
-                                                                                                # y =  iter_per_second_adj_for_N,
-                                                                                                colour = N_label,
-                                                                                                group = device
-                                                                                  ),
-            ) +
-              geom_point(size = 4) + 
-              geom_errorbar(size = 1, width = 0.02, aes(x = n_chunks,
-                                                        y = time_mean, 
-                                                        ymin = time_mean -  1.96 * time_SD,
-                                                        ymax = time_mean +  1.96 * time_SD,
-                                                        colour = N_label,
-                                                        linetype = device
-              )) +
-              geom_line(size = 1,                aes(x = n_chunks,
-                                                     y = time_mean, 
-                                                     colour = N_label,
-                                                     linetype = device
-              )) +
-              # geom_line(size = 2) + 
-              theme_bw(base_size = 16) +
-              theme(legend.position = "bottom")  + 
-              ylab("Time (sec)") + 
-              xlab("N_{chunks}" ) + 
-              #scale_y_continuous(breaks = seq(from = 0, to = 10, by = 1)) + 
-              #   scale_x_continuous(breaks = seq(from = 0, to = 500, by = 1)) +
-              #  scale_color_manual(values = c("5000" = "orange", "12500" = "black", "25000" = "purple")) +  
-              facet_wrap( ~ N_and_N_iter_label, scales = "free") + 
-              theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+           { ## -------- plot 2: panel (b) ----  Panel for N = {5000, 12500, 25000}
+              
+              plot_N_chunks_pilot_study_HPC_plot_1_N_5000_12500_25000 <-   ggplot(  tibble_all_runs_avg_subset_2,  
+                                                                                    mapping = aes(x =  (n_chunks),
+                                                                                                  y = time_mean,
+                                                                                                  # y = Time / N_iter,
+                                                                                                  # y =  iter_per_second_adj_for_N,
+                                                                                                  colour = N_label,
+                                                                                                  group = device
+                                                                                    ),
+              ) +
+                geom_point(size = 4) + 
+                geom_errorbar(size = 1, width = 0.02, aes(x = n_chunks,
+                                                          y = time_mean, 
+                                                          ymin = time_mean -  1.96 * time_SD,
+                                                          ymax = time_mean +  1.96 * time_SD,
+                                                          colour = N_label,
+                                                          linetype = device
+                )) +
+                geom_line(size = 1,                aes(x = n_chunks,
+                                                       y = time_mean, 
+                                                       colour = N_label,
+                                                       linetype = device
+                )) +
+                # geom_line(size = 2) + 
+                theme_bw(base_size = 16) +
+                theme(legend.position = "bottom")  + 
+                ylab("Time (sec)") + 
+                xlab("N_{chunks}" ) + 
+                #  scale_y_continuous(breaks = seq(from = 0, to = 10, by = 1)) + 
+                #  scale_x_continuous(breaks = seq(from = 0, to = 500, by = 1)) +
+                #  scale_color_manual(values = c("5000" = "orange", "12500" = "black", "25000" = "purple")) +  
+                facet_wrap( ~ N_and_N_iter_label, scales = "free") + 
+                theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+              
+              plot_N_chunks_pilot_study_HPC_plot_1_N_5000_12500_25000
             
-            plot_N_chunks_pilot_study_HPC_plot_1_N_5000_12500_25000
           }
           
           

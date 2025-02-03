@@ -57,8 +57,6 @@ R_fn_make_df_ps_opt_N_chunks_given_computer <- function(  pilot_study_opt_N_chun
         
           return(df_all_runs)
   
- ##  dplyr::filter(tibble_all_runs_skeleton, N == 500) %>% print(n = 1000)
-  
 }
 
 
@@ -69,33 +67,33 @@ R_fn_make_df_ps_opt_N_chunks <- function(    pilot_study_opt_N_chunks_list,
                                              n_threads_vec_for_Laptop
 ) { 
         
-      ## DF for HPC:
-      pilot_study_opt_N_chunks_list$n_threads_vec <- n_threads_vec_for_Local_HPC
-      df_all_runs_for_Local_HPC <- R_fn_make_df_ps_opt_N_chunks_given_computer( pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list, 
-                                                                                computer = "HPC")
-      
-      ## df for Laptop:
-      pilot_study_opt_N_chunks_list$n_threads_vec <- n_threads_vec_for_Laptop
-      df_all_runs_for_Local_Laptop <- R_fn_make_df_ps_opt_N_chunks_given_computer( pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list, 
-                                                                                   computer = "Laptop")
-      
-      ## merge the df's:
-      df_list <- list(df_all_runs_for_Local_HPC, df_all_runs_for_Local_Laptop)
-      df_all_runs_all_devices <- tibble(data.table::rbindlist(df_list))
-      df_all_runs_all_devices %>% print(n = 500)
-      
-      return(df_all_runs_all_devices)
+            ## DF for HPC:
+            pilot_study_opt_N_chunks_list$n_threads_vec <- n_threads_vec_for_Local_HPC
+            df_all_runs_for_Local_HPC <- R_fn_make_df_ps_opt_N_chunks_given_computer( pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list, 
+                                                                                      computer = "HPC")
+            
+            ## df for Laptop:
+            pilot_study_opt_N_chunks_list$n_threads_vec <- n_threads_vec_for_Laptop
+            df_all_runs_for_Local_Laptop <- R_fn_make_df_ps_opt_N_chunks_given_computer( pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list, 
+                                                                                         computer = "Laptop")
+            
+            ## merge the df's:
+            df_list <- list(df_all_runs_for_Local_HPC, df_all_runs_for_Local_Laptop)
+            df_all_runs_all_devices <- tibble(data.table::rbindlist(df_list))
+            df_all_runs_all_devices %>% print(n = 500)
+            
+            return(df_all_runs_all_devices)
     
 }
   
   
   
  
-
-dataset_index <- 1
-n_threads_index <- 1
-n_chunks_index <- 1
-n_runs_index <- 1
+ 
+# dataset_index <- 1
+# n_threads_index <- 1
+# n_chunks_index <- 1
+# n_runs_index <- 1
 
 
 R_fn_add_res_to_df_ps_opt_N_chunks <- function(    pilot_study_opt_N_chunks_list,

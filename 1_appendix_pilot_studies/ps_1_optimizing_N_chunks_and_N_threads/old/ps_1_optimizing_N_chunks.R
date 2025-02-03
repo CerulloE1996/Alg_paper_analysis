@@ -40,9 +40,9 @@ times <- c()
   pilot_study_opt_N_chunks_list$n_chunks_vec_N_500   <-  c(1, 2, 4,  5,   10) # ~ 3 mins
   pilot_study_opt_N_chunks_list$n_chunks_vec_N_1000  <-  c(1, 2, 4,  5,   10) # ~ 3 mins
   pilot_study_opt_N_chunks_list$n_chunks_vec_N_2500  <-  c(1, 2, 4,  5,   10,  20,  25) # ~ 4 mins
-  pilot_study_opt_N_chunks_list$n_chunks_vec_N_5000  <- c(1, 2, 4,  5,   10,  20,  25,  40,  50) # ~ 5 mins
-  pilot_study_opt_N_chunks_list$n_chunks_vec_N_12500 <- c(1, 5, 10, 20, 25,  40,  50,  100, 125,  200,  250) # ~ 6 mins
-  pilot_study_opt_N_chunks_list$n_chunks_vec_N_25000 <- c(1, 5, 10, 20, 25,  40,  50,  100, 125,  200,  250, 400, 500) # ~ 7 mins
+  pilot_study_opt_N_chunks_list$n_chunks_vec_N_5000  <-  c(1, 2, 4,  5,   10,  20,  25,  40,  50) # ~ 5 mins
+  pilot_study_opt_N_chunks_list$n_chunks_vec_N_12500 <-  c(1, 5, 10, 20, 25,  40,  50,  100, 125,  200,  250) # ~ 6 mins
+  pilot_study_opt_N_chunks_list$n_chunks_vec_N_25000 <-  c(1, 5, 10, 20, 25,  40,  50,  100, 125,  200,  250, 400, 500) # ~ 7 mins
   ##
   n_max_chunk_combos <- length(pilot_study_opt_N_chunks_list$n_chunks_vec_N_25000)
 }

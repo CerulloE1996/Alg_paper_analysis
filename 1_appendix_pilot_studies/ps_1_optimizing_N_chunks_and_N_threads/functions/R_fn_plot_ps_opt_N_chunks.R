@@ -10,8 +10,7 @@ R_fn_ps_opt_N_chunks_plots <- function(     tibble_all_runs,
                                             pilot_study_opt_N_chunks_list,
                                             global_list,
                                             output_path) { 
-
-  
+      
       # ## Set device
       # pilot_study_opt_N_chunks_list$device <- computer
       # print(paste("device = ", pilot_study_opt_N_chunks_list$device))
@@ -59,21 +58,17 @@ R_fn_ps_opt_N_chunks_plots <- function(     tibble_all_runs,
       metric_shape_main <- "dense"
       ##
       
-  
       
-      tibble_all_runs_avg <- tibble_all_runs %>%
-        dplyr::group_by(df_index, N, n_chunks, n_threads, n_iter, device) %>%
-        dplyr::summarise(
-          time_mean = mean(time_sec, na.rm = TRUE),
-          time_median = median(time_sec, na.rm = TRUE),
-          time_SD = sd(time_sec, na.rm = TRUE),
-          .groups = 'drop'
-        )
+      tibble_all_runs_avg <-  tibble_all_runs %>%
+                              dplyr::group_by(df_index, N, n_chunks, n_threads, n_iter, device) %>%
+                              dplyr::summarise( time_mean = mean(time_sec, na.rm = TRUE),
+                                                time_median = median(time_sec, na.rm = TRUE),
+                                                time_SD = sd(time_sec, na.rm = TRUE),
+                                                .groups = 'drop')
       
       
       {
-          tibble_all_runs_avg <- dplyr::mutate(tibble_all_runs_avg, 
-                                               N_label =  paste0("N = ",  tibble_all_runs_avg$N))
+          tibble_all_runs_avg <- dplyr::mutate(tibble_all_runs_avg,  N_label =  paste0("N = ",  tibble_all_runs_avg$N))
           tibble_all_runs_avg$N_label <- factor( tibble_all_runs_avg$N_label )
           tibble_all_runs_avg$N_label <- factor( tibble_all_runs_avg$N_label, 
                                                  levels = c("N = 500", 
@@ -94,13 +89,12 @@ R_fn_ps_opt_N_chunks_plots <- function(     tibble_all_runs,
                                                                                               "N = 12500, N_{iter} = 16",
                                                                                               "N = 25000, N_{iter} = 8"))
           
-          tibble_all_runs_avg <- tibble_all_runs_avg %>%
-            dplyr::group_by(N, device) %>%
-            dplyr::mutate( time_at_min_n_threads = first(time_mean[n_threads == min(n_threads)])) %>%
-            dplyr::mutate( perfect_scaling_time = time_at_min_n_threads) %>%
-            dplyr::ungroup() %>% 
-            print(n = 1000)
-     
+          tibble_all_runs_avg <-  tibble_all_runs_avg %>%
+                                  dplyr::group_by(N, device) %>%
+                                  dplyr::mutate( time_at_min_n_threads = first(time_mean[n_threads == min(n_threads)]) ) %>%
+                                  dplyr::mutate( perfect_scaling_time  = time_at_min_n_threads ) %>%
+                                  dplyr::ungroup() %>% 
+                                  print(n = 1000)
           
           tibble_all_runs_avg <-  tibble_all_runs_avg %>% dplyr::mutate(  iter_per_second = n_iter /  time_mean,
                                                                           iter_per_second_adj_for_N = N * iter_per_second,
