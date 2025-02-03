@@ -7,8 +7,8 @@
 
 #  --- | --------- R function to fun Mplus LC-MVP model (NOT GHK param. - this only done using Stan or BayesMVP)  --------------------------------------------------------------------
 
-R_fn_run_Mplus_model_LC_MVP <- function(     computer,
-                                             run_type,
+R_fn_run_Mplus_model_LC_MVP <- function(     run_model,
+                                             computer,
                                              Mplus_settings_list,
                                              global_list, 
                                              N_sample_size_of_dataset,
@@ -31,10 +31,10 @@ R_fn_run_Mplus_model_LC_MVP <- function(     computer,
     ## Start timer:
     tictoc::tic("timer_inner")
     
-    
     ##
     Mplus_run_type <- Mplus_settings_list$Mplus_run_type
-    ## Mplus has restriction that n_iter = n_burnin:
+    ##
+    # n_chains <- Mplus_pilot_study_list$n_chains
     n_iter <- round(0.5 * n_fb_iter * n_thin)
     n_burnin <- n_iter
     ##
@@ -72,8 +72,9 @@ R_fn_run_Mplus_model_LC_MVP <- function(     computer,
     ##
     N <- N_sample_size_of_dataset
     ##
+    df_index <- which(N_sample_sizes_vec == N_sample_size_of_dataset)
     y_binary_list <- global_list$data_sim_outs$y_binary_list
-    y <- y_binary_list[[dataset_index]]
+    y <- y_binary_list[[df_index]]
     ##
     ## Turn into format for Mplus:
     df <- data.frame(y) %>% 
@@ -102,54 +103,44 @@ R_fn_run_Mplus_model_LC_MVP <- function(     computer,
           stop("Prior_LKJ must be c(12, 3) to approximately match Stan/BayesMVP")
       
     }
-    
-  
-    
-    {
+ 
       
       #### tictoc::tic("mplus timer")
       
-      fit_mplus <- MplusAutomation::mplusObject(TITLE = "Bayesian LCM-MVP - for mixed binary and/or ordinal data (up to 10 categories)",
-                               #   DATA = "FILE = Mplus.dat;",
-                               USEVARIABLES = "u1 u2 u3 u4 u5;",
-                               VARIABLE = "  
+      Mplus_settings_list$Model_strings$TITLE <- "Bayesian LCM-MVP - for mixed binary and/or ordinal data (up to 10 categories)"
+      Mplus_settings_list$Model_strings$USEVARIABLES <- "u1 u2 u3 u4 u5;"
+      Mplus_settings_list$Model_strings$VARIABLE <- "  
                                            CATEGORICAL = u1-u5 ;
-                                           CLASSES = C(2);", 
-                               #    MONTECARLO = paste("SEED = ", seed, ";"), 
-                               ANALYSIS = paste0("ESTIMATOR = BAYES;",  "\n",
-                                                 " CHAINS = ", n_chains, ";",   "\n",
-                                                 " PROCESSORS = ", n_threads, ";",   "\n",
-                                                 " TYPE = MIXTURE;",   "\n", 
-                                                 " FBITERATIONS = ", n_fb_iter, ";",  "\n",
-                                                 " THIN = ", n_thin, ";",     "\n",
-                                                 " STSEED  =  ",  seed, ";",   "\n",
-                                                 " OPTSEED  =  ", seed, ";",   "\n",
-                                                 " MCSEED  =  ",  seed, ";",   "\n",
-                                                 " BSEED  =  ",   seed, ";"
-                               ),   
-                               MODEL = "%OVERALL%
-                                            !%C#1% ! 
-                                            [C#1*-1] (p31);
-                                            
-                                            u1-u5 WITH u1-u5*0 (p1-p10); 
-                                            
-                                            [u1$1-u5$1*-1] (p11-p15); 
-                                            
-                                            %C#2% !  
-                                              
-                                            u1-u5 WITH u1-u5*0 (p16-p25);
-                                            
-                                            [u1$1-u5$1*+1] (p26-p30);",
-                               # OUTPUT = "   SAMPSTAT MODINDICES (0) STANDARDIZED
-                               # 
-                               # RESIDUAL TECH1 TECH2 TECH3 TECH4
-                               # 
-                               # TECH5 FSCOEF FSDET CINTERVAL PATTERNS; ",
-                               # MODELPRIORS = paste("p13-p42  ~ IW(0, 13);"), 
-                               MODELPRIORS = paste("p1-p10   ~ IW(0.0001,", prior_IW_d, ");", # for LC 1 - DISEASED class 
-                                                   "p16-p25  ~ IW(0.0001,", prior_IW_nd, ");", 
-                                                   
-                                                   "   
+                                           CLASSES = C(2);"
+      #    MONTECARLO = paste("SEED = ", seed, ";"), 
+      Mplus_settings_list$Model_strings$ANALYSIS <- paste0("ESTIMATOR = BAYES;",  "\n",
+                                                           " CHAINS = ", n_chains, ";",   "\n",
+                                                           " PROCESSORS = ", n_threads, ";",   "\n",
+                                                           " TYPE = MIXTURE;",   "\n", 
+                                                           " FBITERATIONS = ", n_fb_iter, ";",  "\n",
+                                                           " THIN = ", n_thin, ";",     "\n",
+                                                           " STSEED  =  ",  seed, ";",   "\n",
+                                                           " OPTSEED  =  ", seed, ";",   "\n",
+                                                           " MCSEED  =  ",  seed, ";",   "\n",
+                                                           " BSEED  =  ",   seed, ";"
+      )
+      Mplus_settings_list$Model_strings$MODEL <- "%OVERALL%
+                                                      !%C#1% ! 
+                                                      [C#1*-1] (p31);
+                                                      
+                                                      u1-u5 WITH u1-u5*0 (p1-p10); 
+                                                      
+                                                      [u1$1-u5$1*-1] (p11-p15); 
+                                                      
+                                                      %C#2% !  
+                                                        
+                                                      u1-u5 WITH u1-u5*0 (p16-p25);
+                                                      
+                                                      [u1$1-u5$1*+1] (p26-p30);"
+      Mplus_settings_list$Model_strings$MODELPRIORS <- paste("p1-p10   ~ IW(0.0001,", prior_IW_d, ");", # for LC 1 - DISEASED class 
+                                                             "p16-p25  ~ IW(0.0001,", prior_IW_nd, ");", 
+                                                             
+                                                             "   
                                                        !!  p31 ~ D(5, 10);   
                                                          p31 ~ D(", prior_prev_alpha, ", ", prior_prev_beta, "); 
                                                        !!!! p31 ~ D(1, 1); 
@@ -159,11 +150,29 @@ R_fn_run_Mplus_model_LC_MVP <- function(     computer,
                         
                                                             !!!! p26 ~ N(-2.10, 0.0625); 
                                                             p26 ~ N(", prior_beta_mean[1, 1, 1], ", ", prior_beta_sd[1, 1, 1]^2, ");
-                                                          p27-p30 ~ N(0, 1);  ! diffuse for index tests"),  
-                               SAVEDATA = "bparameters = bparam.dat;",
-                               rdata = data.frame(df),
-                               quiet = FALSE
-      )
+                                                          p27-p30 ~ N(0, 1);  ! diffuse for index tests")
+      Mplus_settings_list$Model_strings$SAVEDATA <- "bparameters = bparam.dat;"
+      
+      
+   if (run_model == TRUE) {
+     
+      fit_mplus <- MplusAutomation::mplusObject( TITLE =   Mplus_settings_list$Model_strings$TITLE,
+                                                 #   DATA = "FILE = Mplus.dat;",
+                                                 USEVARIABLES =   Mplus_settings_list$Model_strings$USEVARIABLES,
+                                                 VARIABLE = Mplus_settings_list$Model_strings$VARIABLE,
+                                                 #    MONTECARLO = paste("SEED = ", seed, ";"), 
+                                                 ANALYSIS = Mplus_settings_list$Model_strings$ANALYSIS,
+                                                 MODEL = Mplus_settings_list$Model_strings$MODEL,
+                                                 # OUTPUT = "   SAMPSTAT MODINDICES (0) STANDARDIZED
+                                                 # 
+                                                 # RESIDUAL TECH1 TECH2 TECH3 TECH4
+                                                 # 
+                                                 # TECH5 FSCOEF FSDET CINTERVAL PATTERNS; ",
+                                                 # MODELPRIORS = paste("p13-p42  ~ IW(0, 13);"), 
+                                                 MODELPRIORS = Mplus_settings_list$Model_strings$MODELPRIORS,
+                                                 SAVEDATA = Mplus_settings_list$Model_strings$SAVEDATA,
+                                                 rdata = data.frame(df),
+                                                 quiet = FALSE)
       
       res_plus <- MplusAutomation::mplusModeler( fit_mplus,
                                                  modelout = paste0("mplus_model_seed_", seed, "_N_", N, ".inp"), 
@@ -184,11 +193,7 @@ R_fn_run_Mplus_model_LC_MVP <- function(     computer,
         time_mplus_total_inc_csv_inner_numeric <- as.numeric(extract_numeric_string)
       }
       
-      
-      #### if (seed == 10)   beepr::beep("random") # make sound to know model has finished running 
-      
-    }
-    
+  
     
     {
       
@@ -269,11 +274,7 @@ R_fn_run_Mplus_model_LC_MVP <- function(     computer,
             mplus_ess_per_sec_total <- mplus_min_ess / mplus_time_total
           
     }
-    
-
-
-
-
+ 
 
     {
             
@@ -327,11 +328,7 @@ R_fn_run_Mplus_model_LC_MVP <- function(     computer,
             # print(round(mplus_prev_means, 3))
       
     }
-    
-
-
-
-
+ 
 
 
     ## ----- Print info:
@@ -375,20 +372,17 @@ R_fn_run_Mplus_model_LC_MVP <- function(     computer,
                 
                 #  file_name <- paste0("Mplus_", "efficiency_info_", "seed_", seed, "_",  prior_IW_d, "_", prior_IW_nd,  "prior_IW_", N, "N_", n_chains, "chains_", ".RDS")
                 
-      Mplus_file_name_string <- paste0(   "run_type", run_type, "_",
-                                          "computer_", computer, "_",
-                                          "seed_", seed, "_", 
-                                          "priorIW", prior_IW_d, "_",   prior_IW_nd,  "_",
-                                          "N", N, "_",
-                                          "n_threads", n_threads, "_",
-                                          "n_chains", n_chains, "_",
-                                          "n_fb_iter", n_fb_iter, "_",
-                                          "n_thin", n_thin, "_",
-                                          ".RDS")
-                
-      
-                
-                
+                Mplus_file_name_string <- paste0(   "Mplus", "_",
+                                                    "computer_", computer, "_",
+                                                    "seed_", seed, "_", 
+                                                    "priorIW", prior_IW_d, "_",   prior_IW_nd,  "_",
+                                                    "N", N, "_",
+                                                    "n_threads", n_threads, "_",
+                                                    "n_chains", n_chains, "_",
+                                                    "n_fb_iter", n_fb_iter, "_",
+                                                    "n_thin", n_thin, "_",
+                                                    ".RDS")
+                 
                 total_time_seconds <- mplus_time_total
                 total_time_mins <- total_time_seconds / 60
                 total_time_hours <- total_time_mins / 60
@@ -431,6 +425,19 @@ R_fn_run_Mplus_model_LC_MVP <- function(     computer,
                 saveRDS(object = file_list, file = file_path)
                 
     }
+    
+      list_if_ran_model <- list(Mplus_settings_list = Mplus_settings_list)
+      ##
+      return(list_if_ran_model)
+    
+    }  else { 
+      
+      list_if_not_ran_model <- list(Mplus_settings_list = Mplus_settings_list)
+      ##
+      return(list_if_not_ran_model)
+      
+    }
+    
   
   
 }

@@ -58,18 +58,6 @@ R_fn_run_BayesMVP_model_LC_MVP <- function(    computer,
                                                n_superchains = NULL,
                                                n_iter = 1000,
                                                n_burnin = 500
-                                               # adapt_delta = 0.80,
-                                               # learning_rate = 0.05,
-                                               # metric_shape_main = "dense",
-                                               # metric_type_main = "Hessian",
-                                               # clip_iter = 25,
-                                               # interval_width_main = 50,
-                                               # tau_mult = 2.0,
-                                               # ratio_M_us = 0.25,
-                                               # ratio_M_main = 0.25,
-                                               # force_autodiff = FALSE,
-                                               # force_PartialLog = FALSE,
-                                               # multi_attempts = TRUE
                                                )  {
   
        ## Start timer:
