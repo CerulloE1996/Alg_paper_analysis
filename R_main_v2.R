@@ -6,6 +6,8 @@
     ##  ---- Laptop (aka "normal computer") specs:
     ##  BOOKMARK
 
+
+
     #### ------- Set working directory (wd) - change if needed:  -----------------------------------------------------------------------s--------- 
     {
       
@@ -265,53 +267,55 @@
     
     #### -------   Prepare data for Stan model(s)    -----------------------------------------------------------------------------------------------------------------------------
     source(file.path(getwd(), "0_utilities/shared_functions/R_fn_Prep_Stan_binary_data.R"))
-    ##
-    Stan_data_list <- R_fn_prep_Stan_binary_data(global_list = global_list)
-    ## outputs list is lists, where each outer-most list is for each of the different N:
-    str(Stan_data_list)
-    
-    Stan_data_list_save <- Stan_data_list
-    
-    
- 
-    
-    #### -------   Set C++ flags for Stan model(s) [e.g. enabling AVX-512 on local HPC and AVX2 on laptop] + compile the Stan model(s)   -----------------------------------------
-    #### source(file.path(getwd(), "0_utilities/shared_configs/Prep_Stan_compile_model.R"))
-    source(file.path(getwd(), "0_utilities/shared_functions/R_fn_compile_Stan_model.R"))
-    ##
-    ## Compile Stan model using custom optimised C++ flags (to make "fairer" comparison with BayesMVP):
-    Stan_model_file_path <-   file.path(getwd(), "0_utilities/stan_models/LC_MVP_bin_PartialLog_v5.stan")
-    # Stan_model_file_path <-  "/home/enzo/Documents/Work/PhD_work/R_packages/BayesMVP/inst/BayesMVP/inst/stan_models/LC_MVP_bin_PartialLog_v5.stan"
-    # Stan_model_file_path <-  "/home/enzo/Documents/Work/PhD_work/R_packages/BayesMVP/inst/BayesMVP/inst/stan_models/PO_LC_MVP_bin.stan"
-    ##
-    Stan_settings_list <- list()
-    ##
-    Stan_settings_list$custom_cpp_user_header_file_path <- NULL
-    ##
-    Stan_settings_list$set_custom_optimised_CXX_CPP_flags <- TRUE
-    ##
     {
-      if (os == "unix") { 
-          Stan_settings_list$cpp_flags$CXX_COMPILER_PATH <- "/opt/AMD/aocc-compiler-5.0.0/bin/clang++"
-          Stan_settings_list$cpp_flags$CPP_COMPILER_PATH <- "/opt/AMD/aocc-compiler-5.0.0/bin/clang"
-      } else if (os == "windows") { 
-          Stan_settings_list$cpp_flags$CXX_COMPILER_PATH <- "g++"
-          Stan_settings_list$cpp_flags$CPP_COMPILER_PATH <- "gcc"
-      }
-      Stan_settings_list$cpp_flags$MATH_FLAGS <- "-fno-math-errno -fno-signed-zeros -fno-trapping-math"
-      ## Stan_settings_list$MATH_FLAGS <- "-fno-math-errno"
-      ##
-      Stan_settings_list$cpp_flags$THREAD_FLAGS <- "-D_REENTRANT"
-      ##
-      Stan_settings_list$cpp_flags$FMA_FLAGS <- "-mfma"
-      ##
-      if (computer == "Local_HPC") { 
-          Stan_settings_list$cpp_flags$AVX_FLAGS <- "-mavx -mavx2 -mavx512f -mavx512vl -mavx512dq"
-      } else if (computer == "Laptop") { 
-          Stan_settings_list$cpp_flags$AVX_FLAGS <- "-mavx -mavx2"
-      }
-      
-      
+        ##
+        Stan_data_list <- R_fn_prep_Stan_binary_data(global_list = global_list)
+        ## outputs list is lists, where each outer-most list is for each of the different N:
+        str(Stan_data_list)
+        
+        Stan_data_list_save <- Stan_data_list
+        
+        
+     
+        
+        #### -------   Set C++ flags for Stan model(s) [e.g. enabling AVX-512 on local HPC and AVX2 on laptop] + compile the Stan model(s)   -----------------------------------------
+        #### source(file.path(getwd(), "0_utilities/shared_configs/Prep_Stan_compile_model.R"))
+        source(file.path(getwd(), "0_utilities/shared_functions/R_fn_compile_Stan_model.R"))
+        ##
+        ## Compile Stan model using custom optimised C++ flags (to make "fairer" comparison with BayesMVP):
+        Stan_model_file_path <-   file.path(getwd(), "0_utilities/stan_models/LC_MVP_bin_PartialLog_v5.stan")
+        # Stan_model_file_path <-  "/home/enzo/Documents/Work/PhD_work/R_packages/BayesMVP/inst/BayesMVP/inst/stan_models/LC_MVP_bin_PartialLog_v5.stan"
+        # Stan_model_file_path <-  "/home/enzo/Documents/Work/PhD_work/R_packages/BayesMVP/inst/BayesMVP/inst/stan_models/PO_LC_MVP_bin.stan"
+        ##
+        Stan_settings_list <- list()
+        ##
+        Stan_settings_list$custom_cpp_user_header_file_path <- NULL
+        ##
+        Stan_settings_list$set_custom_optimised_CXX_CPP_flags <- TRUE
+        ##
+        {
+          if (os == "unix") { 
+              Stan_settings_list$cpp_flags$CXX_COMPILER_PATH <- "/opt/AMD/aocc-compiler-5.0.0/bin/clang++"
+              Stan_settings_list$cpp_flags$CPP_COMPILER_PATH <- "/opt/AMD/aocc-compiler-5.0.0/bin/clang"
+          } else if (os == "windows") { 
+              Stan_settings_list$cpp_flags$CXX_COMPILER_PATH <- "g++"
+              Stan_settings_list$cpp_flags$CPP_COMPILER_PATH <- "gcc"
+          }
+          Stan_settings_list$cpp_flags$MATH_FLAGS <- "-fno-math-errno -fno-signed-zeros -fno-trapping-math"
+          ## Stan_settings_list$MATH_FLAGS <- "-fno-math-errno"
+          ##
+          Stan_settings_list$cpp_flags$THREAD_FLAGS <- "-D_REENTRANT"
+          ##
+          Stan_settings_list$cpp_flags$FMA_FLAGS <- "-mfma"
+          ##
+          if (computer == "Local_HPC") { 
+              Stan_settings_list$cpp_flags$AVX_FLAGS <- "-mavx -mavx2 -mavx512f -mavx512vl -mavx512dq"
+          } else if (computer == "Laptop") { 
+              Stan_settings_list$cpp_flags$AVX_FLAGS <- "-mavx -mavx2"
+          }
+          
+          
+        }
     }
  
     
@@ -589,7 +593,8 @@
                 #   n_superchains = NULL
                 # }
                 
-                Mplus_model_outs <- R_fn_run_Mplus_model_LC_MVP(     Mplus_settings_list = Mplus_pilot_study_list,
+                Mplus_model_outs <- R_fn_run_Mplus_model_LC_MVP(     run_model = FALSE,
+                                                                     Mplus_settings_list = Mplus_pilot_study_list,
                                                                      global_list = global_list,
                                                                      N_sample_size_of_dataset = N,
                                                                      run_number = i,
@@ -677,6 +682,39 @@
     }  
 
     #### ---------------------------------------------------------------------------------------------------------------------------------------------------- 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     
     
@@ -909,7 +947,364 @@
     
     
     
-    #### ---------------------------------------------------------------------------------------------------------------------------------------------------- 
+    
+    #### -------  Pilot study #1 - "optimising the number of chunks and number of threads for BayesMVP manual-gradients model" ) ---------------------------------
+    source(file.path(getwd(),   "1_appendix_pilot_studies",
+                                "ps_1_optimizing_N_chunks_and_N_threads",
+                                "functions", 
+                                "R_fn_run_ps_1_opt_N_chunks.R"))
+    ##
+    pilot_study_opt_N_chunks_list <- list()
+    ##
+    n_threads_vec_for_Laptop <-    c(2, 4, 8, 16)
+    n_threads_vec_for_Local_HPC <- c(4, 8, 16, 32, 64)
+    ##
+    if (computer == "Laptop")  { 
+      pilot_study_opt_N_chunks_list$n_total_threads <- 8*2 ## SMT * enabled * on Laptop
+      options(mc.cores = n_total_threads)
+      pilot_study_opt_N_chunks_list$n_threads_vec <- n_threads_vec_for_Laptop
+      pilot_study_opt_N_chunks_list$SIMD_vect_type <- "AVX2"
+    } else { 
+      pilot_study_opt_N_chunks_list$n_total_threads <- 96 ## SMT * disabled * on local_HPC
+      options(mc.cores = n_total_threads)
+      pilot_study_opt_N_chunks_list$n_threads_vec <- n_threads_vec_for_Local_HPC
+      pilot_study_opt_N_chunks_list$SIMD_vect_type <- "AVX512"
+    }
+    ## Set output directory:
+    pilot_study_opt_N_chunks_list$output_path <- file.path(  getwd(),
+                                                            "1_appendix_pilot_studies",
+                                                            "ps_1_optimizing_N_chunks_and_N_threads",
+                                                            "outputs")
+    ## Set other variables: 
+    pilot_study_opt_N_chunks_list$n_runs <- 10
+    pilot_study_opt_N_chunks_list$start_index <- 1 
+    pilot_study_opt_N_chunks_list$N_vec <- BayesMVP_pilot_study_list$N_sample_sizes_vec_for_BayesMVP
+    ##
+    {
+      ##
+      pilot_study_opt_N_chunks_list$n_chunks_vecs <- list()
+      ##
+      pilot_study_opt_N_chunks_list$n_chunks_vecs$`500` <-   c(1, 2, 4, 5, 10)
+      pilot_study_opt_N_chunks_list$n_chunks_vecs$`1000` <-  c(1, 2, 4, 5, 10)
+      pilot_study_opt_N_chunks_list$n_chunks_vecs$`2500` <-  c(1, 2, 4, 5, 10, 20,  25)
+      pilot_study_opt_N_chunks_list$n_chunks_vecs$`5000` <-  c(1, 2, 4, 5, 10, 20,  25, 40,  50)
+      pilot_study_opt_N_chunks_list$n_chunks_vecs$`12500` <- c(1, 5, 10, 20, 25, 40, 50, 100, 125, 200, 250)
+      pilot_study_opt_N_chunks_list$n_chunks_vecs$`25000` <- c(1, 5, 10, 20, 25, 40, 50, 100, 125, 200, 250, 400, 500)
+      ##
+      pilot_study_opt_N_chunks_list$n_max_chunk_combos <- length(pilot_study_opt_N_chunks_list$n_chunks_vecs$`25000`)
+      ## n_iter for each N:
+      pilot_study_opt_N_chunks_list$n_iter_given_N$`500` <-   400 
+      pilot_study_opt_N_chunks_list$n_iter_given_N$`1000` <-  200 
+      pilot_study_opt_N_chunks_list$n_iter_given_N$`2500` <-  80 
+      pilot_study_opt_N_chunks_list$n_iter_given_N$`5000` <-  40 
+      pilot_study_opt_N_chunks_list$n_iter_given_N$`12500` <- 16 
+      pilot_study_opt_N_chunks_list$n_iter_given_N$`25000` <- 8 
+    }
+    ##
+    # ## Run the pilot study (if not already run and/or don't have results/output files):
+    # if (computer == "Laptop") {
+    #   run_ps_opt_N_chunks_outs <- R_fn_run_ps_opt_N_chunks( pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list,
+    #                                                         computer = "Laptop",
+    #                                                         BayesMVP_model_obj = BayesMVP_LC_MVP_model_using_manual_grad_obj,
+    #                                                         global_list = global_list,
+    #                                                         output_path  = pilot_study_opt_N_chunks_list$output_path)
+    # } else if (computer == "Local_HPC") { 
+    #   run_ps_opt_N_chunks_outs <- R_fn_run_ps_opt_N_chunks( pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list,
+    #                                                         computer = "Local_HPC",
+    #                                                         BayesMVP_model_obj = BayesMVP_LC_MVP_model_using_manual_grad_obj,
+    #                                                         global_list = global_list,
+    #                                                         output_path  = pilot_study_opt_N_chunks_list$output_path)
+    # }
+    ##
+    ## Make big tibble (skeleton to store results):
+    ##
+    path_ps1 <- file.path(getwd(), "1_appendix_pilot_studies", "ps_1_optimizing_N_chunks_and_N_threads")
+    source(file.path(path_ps1, "functions", "R_fn_make_df_ps_1_opt_N_chunks.R"))
+    source(file.path(path_ps1, "functions", "R_fn_run_ps_1_opt_N_chunks.R"))
+    source(file.path(path_ps1, "functions", "R_fn_ps_N_chunks_ggplot_1.R"))
+    source(file.path(path_ps1, "functions", "R_fn_ps_N_chunks_ggplot_2.R"))
+    source(file.path(path_ps1, "functions", "R_fn_plot_ps_opt_N_chunks.R"))
+    ##
+    ## Run the function:
+    ##
+    tibble_all_runs_skeleton <- R_fn_make_df_ps_opt_N_chunks(    pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list,
+                                                                 n_threads_vec_for_Local_HPC = n_threads_vec_for_Local_HPC,
+                                                                 n_threads_vec_for_Laptop = n_threads_vec_for_Laptop)
+    ## Add outputs to list:
+    pilot_study_opt_N_chunks_list$tibble_all_runs_skeleton <- tibble_all_runs_skeleton
+    ##
+    ## Add the results (stored as R arrays in RDS files) to the big tibble:
+    ##
+    tibble_all_runs <- R_fn_add_res_to_df_ps_opt_N_chunks( pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list,
+                                                           output_path = pilot_study_opt_N_chunks_list$output_path,
+                                                           tibble_skeleton = tibble_all_runs_skeleton, 
+                                                           n_threads_vec_for_Local_HPC = n_threads_vec_for_Local_HPC,
+                                                           n_threads_vec_for_Laptop = n_threads_vec_for_Laptop)
+    ## Add outputs to list:
+    pilot_study_opt_N_chunks_list$tibble_all_runs <- tibble_all_runs
+    ##
+    ## Make + save plots (+ key tables/tibbles):
+    ##
+    plots_and_table_outs <- R_fn_ps_opt_N_chunks_plots(tibble_all_runs = tibble_all_runs,
+                                                       pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list,
+                                                       # chosen_n_threads_Laptop = chosen_n_threads_Laptop,
+                                                       # chosen_n_threads_HPC = chosen_n_threads_HPC,
+                                                       global_list = global_list,
+                                                       output_path = pilot_study_opt_N_chunks_list$output_path)
+    ## Add outputs to list:
+    pilot_study_opt_N_chunks_list$plots_and_table_outs <- plots_and_table_outs
+    ##
+    ## Print table/tibble 1:                                                
+    plots_and_table_outs$tibble_1_showing_optimal_n_chunks_per_N_for_HPC %>% print(n = 100)
+    plots_and_table_outs$tibble_1_showing_optimal_n_chunks_per_N_for_Laptop %>% print(n = 100)
+    ## Print table/tibble 2:  
+    plots_and_table_outs$tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_HPC %>% print(n = 100)
+    plots_and_table_outs$tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_Laptop %>% print(n = 100)
+    ## Print plot panel 1:
+    plots_and_table_outs$plot_panel_1_opt_N_chunks_at_the_every_tested_thread_count
+    ## Print plot panel 2:
+    plots_and_table_outs$plot_panel_2_opt_N_chunks_at_the_opt_thread_count
+     
+    ###
+    ### Now, based on table 1 and plot 1 above - we can choose the optimal number of threads to use for the local HPC and laptop, for each N
+    # chosen_n_threads_Laptop = 8,
+    # chosen_n_threads_HPC = 64,
+    ##
+    tibble_showing_optimal_n_chunks_per_N_for_HPC
+    tibble_showing_optimal_n_chunks_per_N_for_Laptop
+   
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    #### -------  Pilot study #2 - "Comparing parallel scaling for BayesMVP manual-gradients LC-MVP model (with and without chunking) to Stan and Mplus" --------
+    source(file.path(getwd(), 
+                     "1_appendix_pilot_studies",
+                     "ps_2_parallel_scaling_vs_Mplus_Stan",
+                     "functions", 
+                     "R_fn_ps_2_parallel_scaling_comp.R"))
+    ##
+    ## Make initial list:
+    pilot_study_parallel_scaling_comp_list <- list()
+    ##
+    ## First add the ps_1 list to the ps_2 list as there is much overlap:
+    pilot_study_parallel_scaling_comp_list$pilot_study_opt_N_chunks_list <- pilot_study_opt_N_chunks_list
+    ##
+    pilot_study_parallel_scaling_comp_list$output_path <- file.path(   getwd(),
+                                                                       "1_appendix_pilot_studies",
+                                                                       "ps_2_parallel_scaling_vs_Mplus_Stan",
+                                                                       "outputs")
+    ## Only running at the "Optimal number of threads" found for ps1 for all models:
+    pilot_study_parallel_scaling_comp_list$n_threads_vec_for_Laptop <-    16
+    pilot_study_parallel_scaling_comp_list$n_threads_vec_for_Local_HPC <- 64
+    ##
+    if (computer == "Laptop")  { 
+      pilot_study_parallel_scaling_comp_list$n_total_threads <- 8*2 ## SMT * enabled * on Laptop
+      options(mc.cores = n_total_threads)
+      pilot_study_parallel_scaling_comp_list$n_threads_vec <- pilot_study_parallel_scaling_comp_list$n_threads_vec_for_Laptop
+      pilot_study_parallel_scaling_comp_list$SIMD_vect_type <- "AVX2"
+    } else { 
+      pilot_study_parallel_scaling_comp_list$n_total_threads <- 96 ## SMT * disabled * on local_HPC
+      options(mc.cores = n_total_threads)
+      pilot_study_parallel_scaling_comp_list$n_threads_vec <- pilot_study_parallel_scaling_comp_list$n_threads_vec_for_Local_HPC
+      pilot_study_parallel_scaling_comp_list$SIMD_vect_type <- "AVX512"
+    }
+    ##
+
+    
+    ## Set other variables: 
+    pilot_study_parallel_scaling_comp_list$n_runs <- 10
+    pilot_study_parallel_scaling_comp_list$start_index <- 1 
+    pilot_study_parallel_scaling_comp_list$N_vec <- BayesMVP_pilot_study_list$N_sample_sizes_vec_for_BayesMVP
+    ##
+    ## Only run the manual-gradient BayesMVP LC_MVP model at the optimal # of chunks found from ps1 + 1 chunk (as a reference/"baseline"), for each N:
+    {
+      ##
+      N_vec <- pilot_study_opt_N_chunks_list$N_vec
+      ## HPC tibble from ps1 needed:
+      tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_HPC <- 
+                    pilot_study_opt_N_chunks_list$plots_and_table_outs$tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_HPC 
+      ## Laptop tibble from ps1 needed:
+      tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_Laptop <- 
+        pilot_study_opt_N_chunks_list$plots_and_table_outs$tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_Laptop 
+      ##
+      pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads <- list()
+      pilot_study_parallel_scaling_comp_list$n_chunks_vecs <- list()
+      ##
+      N <- 500
+      for (N in N_vec) {
+              ##
+              N_current <- N
+              ##
+              ## First for the HPC:
+              subset_temp_given_N <- tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_HPC %>%
+                                     dplyr::filter(near(N, N_current), n_threads == pilot_study_parallel_scaling_comp_list$n_threads_vec_for_Local_HPC)
+              ##
+              opt_n_chunks_given_N <- as.numeric(as.character(subset_temp_given_N$n_chunks))
+              ##
+              pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$HPC[[as.character(N_current)]] <- opt_n_chunks_given_N
+              ##
+              temp <- pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$HPC[[as.character(N_current)]]
+              pilot_study_parallel_scaling_comp_list$n_chunks_vecs$HPC[[as.character(N_current)]] <-   c(1, temp)
+              ##
+              ## Then for the laptop:
+              subset_temp_given_N <- tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_Laptop %>%
+                                     dplyr::filter(near(N, N_current), n_threads == pilot_study_parallel_scaling_comp_list$n_threads_vec_for_Laptop)
+              ##
+              opt_n_chunks_given_N <- as.numeric(as.character(subset_temp_given_N$n_chunks))
+              ##
+              pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$Laptop[[as.character(N_current)]] <- opt_n_chunks_given_N
+              ##
+              temp <- pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$Laptop[[as.character(N_current)]]
+              pilot_study_parallel_scaling_comp_list$n_chunks_vecs$Laptop[[as.character(N_current)]] <-   c(1, temp)
+              ##
+      }
+      ## Check for HPC:
+      pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$HPC
+      pilot_study_parallel_scaling_comp_list$n_chunks_vecs$HPC
+      ## Check for Laptop:
+      pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$Laptop
+      pilot_study_parallel_scaling_comp_list$n_chunks_vecs$Laptop
+      ##
+      pilot_study_parallel_scaling_comp_list$n_max_chunk_combos <- 2
+      ##
+      ## n_iter for each N (same as in ps_1!)
+      pilot_study_parallel_scaling_comp_list$n_iter_given_N <-      pilot_study_opt_N_chunks_list$n_iter_given_N
+      ##
+    }
+    
+    ## Get settings/lists for Mplus: 
+    Mplus_settings_outs <- R_fn_run_Mplus_model_LC_MVP(      run_model = FALSE,
+                                                             Mplus_settings_list = Mplus_pilot_study_list,
+                                                             global_list = global_list,
+                                                             N_sample_size_of_dataset = N,
+                                                             run_number = i,
+                                                             save_full_output = TRUE,
+                                                             save_output_directory =  Mplus_pilot_study_list$output_path,
+                                                             compute_nested_rhat = NULL,
+                                                             MCMC_seed = i,
+                                                             n_chains = Mplus_pilot_study_list$n_chains,
+                                                             n_threads = Mplus_pilot_study_list$n_threads,
+                                                             n_superchains = Mplus_pilot_study_list$n_superchains,
+                                                             n_fb_iter = Mplus_pilot_study_list$n_fb_iter,
+                                                             n_thin = Mplus_pilot_study_list$n_thin)
+    
+    Mplus_settings_list <- Mplus_settings_outs$Mplus_settings_list
+    
+    
+    ## Run the pilot study (if not already run and/or don't have results/output files):
+    ##
+    # algorithm <- "MD_BayesMVP"
+    algorithm <- "AD_BayesMVP_Stan"
+    ## algorithm <- "Mplus_WCP"
+    # algorithm <- "Mplus_WCP"
+    ##
+    # {
+    #   pilot_study_parallel_scaling_comp_list = pilot_study_parallel_scaling_comp_list
+    #   computer = "Laptop"
+    #   algorithm = algorithm
+    #   BayesMVP_manual_gradient_model_obj = BayesMVP_LC_MVP_model_using_manual_grad_obj
+    #   BayesMVP_using_Stan_file_model_obj = BayesMVP_LC_MVP_model_using_Stan_file_obj
+    #   global_list = global_list
+    #   Stan_data_list = Stan_data_list
+    #   Mplus_settings_list = Mplus_settings_list
+    #   output_path  = pilot_study_parallel_scaling_comp_list$output_path
+    # }
+    
+    ##
+    path_ps2 <- file.path(getwd(), "1_appendix_pilot_studies", "ps_2_parallel_scaling_vs_Mplus_Stan")
+    source(file.path(path_ps2, "functions", "R_fn_ps_2_parallel_scaling_comp.R"))
+    ##
+    if (computer == "Laptop") {
+      run_ps_opt_N_chunks_outs <- R_fn_RUN_ps_parallel_scaling_comp(  pilot_study_parallel_scaling_comp_list = pilot_study_parallel_scaling_comp_list,
+                                                                      computer = "Laptop",
+                                                                      algorithm = algorithm,
+                                                                      BayesMVP_manual_gradient_model_obj = BayesMVP_LC_MVP_model_using_manual_grad_obj,
+                                                                      BayesMVP_using_Stan_file_model_obj = BayesMVP_LC_MVP_model_using_Stan_file_obj,
+                                                                      global_list = global_list,
+                                                                      Stan_data_list = Stan_data_list,
+                                                                      Mplus_settings_list = Mplus_settings_list,
+                                                                      output_path  = pilot_study_parallel_scaling_comp_list$output_path)
+    } else if (computer == "Local_HPC") {
+      run_ps_opt_N_chunks_outs <- R_fn_RUN_ps_parallel_scaling_comp(  pilot_study_parallel_scaling_comp_list = pilot_study_parallel_scaling_comp_list,
+                                                                      computer = "Local_HPC",
+                                                                      algorithm = algorithm,
+                                                                      BayesMVP_manual_gradient_model_obj = BayesMVP_LC_MVP_model_using_manual_grad_obj,
+                                                                      BayesMVP_using_Stan_file_model_obj = BayesMVP_LC_MVP_model_using_Stan_file_obj,
+                                                                      global_list = global_list,
+                                                                      Stan_data_list = Stan_data_list,
+                                                                      Mplus_settings_list = Mplus_settings_list,
+                                                                      output_path  = pilot_study_parallel_scaling_comp_list$output_path)
+    }
+    # ##
+    # ## Make big tibble (skeleton to store results):
+    # ##
+    # path_ps2 <- file.path(getwd(), "1_appendix_pilot_studies", "ps_2_parallel_scaling_vs_Mplus_Stan")
+    # # source(file.path(path_ps2, "functions", "R_fn_make_df_ps_1_opt_N_chunks.R"))
+    # # source(file.path(path_ps2, "functions", "R_fn_run_ps_1_opt_N_chunks.R"))
+    # # source(file.path(path_ps2, "functions", "R_fn_ps_N_chunks_ggplot_1.R"))
+    # # source(file.path(path_ps2, "functions", "R_fn_ps_N_chunks_ggplot_2.R"))
+    # # source(file.path(path_ps2, "functions", "R_fn_plot_ps_opt_N_chunks.R"))
+    # ##
+    # ## Run the function:
+    # ##
+    # tibble_all_runs_skeleton <- R_fn_make_df_ps_opt_N_chunks(    pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list,
+    #                                                              n_threads_vec_for_Local_HPC = n_threads_vec_for_Local_HPC,
+    #                                                              n_threads_vec_for_Laptop = pilot_study_parallel_scaling_comp_list$n_threads_vec_for_Laptop)
+    # ##
+    # ## Add the results (stored as R arrays in RDS files) to the big tibble:
+    # ##
+    # tibble_all_runs <- R_fn_add_res_to_df_ps_opt_N_chunks( pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list,
+    #                                                        output_path = pilot_study_opt_N_chunks_list$output_path,
+    #                                                        tibble_skeleton = tibble_all_runs_skeleton, 
+    #                                                        n_threads_vec_for_Local_HPC = n_threads_vec_for_Local_HPC,
+    #                                                        n_threads_vec_for_Laptop = pilot_study_parallel_scaling_comp_list$n_threads_vec_for_Laptop)
+    # ##
+    # ## Make + save plots (+ key tables/tibbles):
+    # ##
+    # plots_and_table_outs <- R_fn_ps_opt_N_chunks_plots(tibble_all_runs = tibble_all_runs,
+    #                                                    pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list,
+    #                                                    # chosen_n_threads_Laptop = chosen_n_threads_Laptop,
+    #                                                    # chosen_n_threads_HPC = chosen_n_threads_HPC,
+    #                                                    global_list = global_list,
+    #                                                    output_path = pilot_study_opt_N_chunks_list$output_path)
+    # 
+    # ## table/tibble 1:                                                
+    # plots_and_table_outs$tibble_1_showing_optimal_n_chunks_per_N_for_HPC %>% print(n = 100)
+    # plots_and_table_outs$tibble_1_showing_optimal_n_chunks_per_N_for_Laptop %>% print(n = 100)
+    # ## table/tibble 2:  
+    # plots_and_table_outs$tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_HPC %>% print(n = 100)
+    # plots_and_table_outs$tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_Laptop %>% print(n = 100)
+    # ## Plot panel 1:
+    # plots_and_table_outs$plot_panel_1_opt_N_chunks_at_the_every_tested_thread_count
+    # ## Plot panel 2:
+    # plots_and_table_outs$plot_panel_2_opt_N_chunks_at_the_opt_thread_count
+    # 
+    # ###
+    # ### Now, based on table 1 and plot 1 above - we can choose the optimal number of threads to use for the local HPC and laptop, for each N
+    # # chosen_n_threads_Laptop = 8,
+    # # chosen_n_threads_HPC = 64,
+    # ##
+    # tibble_showing_optimal_n_chunks_per_N_for_HPC
+    # tibble_showing_optimal_n_chunks_per_N_for_Laptop
+    # 
+    # 
+    
+    
+    
+    
     
     
     
@@ -924,4 +1319,5 @@
     
     
 
+    
     
