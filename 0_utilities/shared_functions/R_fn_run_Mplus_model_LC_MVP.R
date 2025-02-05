@@ -2,8 +2,8 @@
 
 
 
-
-
+# MCMC_seed <- 1
+# N_sample_size_of_dataset <- 500
 
 #  --- | --------- R function to fun Mplus LC-MVP model (NOT GHK param. - this only done using Stan or BayesMVP)  --------------------------------------------------------------------
 
@@ -75,6 +75,8 @@ R_fn_run_Mplus_model_LC_MVP <- function(     run_model,
     df_index <- which(N_sample_sizes_vec == N_sample_size_of_dataset)
     y_binary_list <- global_list$data_sim_outs$y_binary_list
     y <- y_binary_list[[df_index]]
+    # ##
+    # n_params_main <- global_list$Model_settings_list$n_params_main
     ##
     ## Turn into format for Mplus:
     df <- data.frame(y) %>% 
@@ -156,285 +158,305 @@ R_fn_run_Mplus_model_LC_MVP <- function(     run_model,
       
    if (run_model == TRUE) {
      
-      fit_mplus <- MplusAutomation::mplusObject( TITLE =   Mplus_settings_list$Model_strings$TITLE,
-                                                 #   DATA = "FILE = Mplus.dat;",
-                                                 USEVARIABLES =   Mplus_settings_list$Model_strings$USEVARIABLES,
-                                                 VARIABLE = Mplus_settings_list$Model_strings$VARIABLE,
-                                                 #    MONTECARLO = paste("SEED = ", seed, ";"), 
-                                                 ANALYSIS = Mplus_settings_list$Model_strings$ANALYSIS,
-                                                 MODEL = Mplus_settings_list$Model_strings$MODEL,
-                                                 # OUTPUT = "   SAMPSTAT MODINDICES (0) STANDARDIZED
-                                                 # 
-                                                 # RESIDUAL TECH1 TECH2 TECH3 TECH4
-                                                 # 
-                                                 # TECH5 FSCOEF FSDET CINTERVAL PATTERNS; ",
-                                                 # MODELPRIORS = paste("p13-p42  ~ IW(0, 13);"), 
-                                                 MODELPRIORS = Mplus_settings_list$Model_strings$MODELPRIORS,
-                                                 SAVEDATA = Mplus_settings_list$Model_strings$SAVEDATA,
-                                                 rdata = data.frame(df),
-                                                 quiet = FALSE)
-      
-      res_plus <- MplusAutomation::mplusModeler( fit_mplus,
-                                                 modelout = paste0("mplus_model_seed_", seed, "_N_", N, ".inp"), 
-                                                 writeData = "always",
-                                                 # Mplus_command = "/opt/mplusdemo/",
-                                                 run = 1)
-      
-      MplusAutomation::get_results(res_plus, "summaries")
-      
-      #### ---- Model run time ("inner" timer) - using tictoc:
-      {
-        print(tictoc::toc(log = TRUE))
-        log.txt <- tictoc::tic.log(format = TRUE)
-        tictoc::tic.clearlog()
-        time_stan_total_inc_csv_inner <- unlist(log.txt)
-        ##
-        extract_numeric_string <- str_extract(time_stan_total_inc_csv_inner, "\\d+\\.\\d+")   
-        time_mplus_total_inc_csv_inner_numeric <- as.numeric(extract_numeric_string)
-      }
-      
-  
-    
-    {
-      
-            mplus_posterior_samples <- MplusAutomation::get_bparameters(res_plus)$valid_draw
-            mplus_posterior_samp_array <- array(dim = c(n_chains, dim(mplus_posterior_samples[[1]])[1], dim(mplus_posterior_samples[[1]])[2] - 2))
-            #  str(mplus_posterior_samp_array)
-            ##
-            for (i in 1:n_chains) {
-              mplus_posterior_samp_array[i, , ] <- mplus_posterior_samples[[i]][,3:(dim(mplus_posterior_samples[[1]])[2])]
-            }
-            
-            
-            #### ---- Re-format as a list (for main_params ONLY!):
-            mplus_trace_list <- list()
-            for (i in 1:n_params_main) {
-              ## Take the * transpose * since n_rows must equal n_iter and n_cols must equal n_chains:
-              mplus_trace_list[[i]] <- t(mplus_posterior_samp_array[,,i])
-            }
-            #### str(mplus_trace_list)
-            
-            
-            #### ---- Compute split-ESS using BayesMVP:
-            Rcpp_outs_split_ESS <- BayesMVP:::Rcpp_compute_MCMC_diagnostics( mcmc_3D_array = mplus_trace_list,
-                                                                             diagnostic = "split_ESS",
-                                                                             n_threads = parallel::detectCores())
-            ess_vec <- Rcpp_outs_split_ESS$diagnostics[,1]
-            ## Min ESS:
-            Min_ESS <- round(min(ess_vec, na.rm = TRUE), 0)
-            ## Print:
-            print(paste("ESS (min) = ", Min_ESS))
-          
-            
-            #### ---- Compute split-Rhat using BayesMVP:
-            Rcpp_outs_split_rhat <- BayesMVP:::Rcpp_compute_MCMC_diagnostics( mcmc_3D_array = mplus_trace_list,
-                                                                              diagnostic = "split_rhat",
-                                                                              n_threads = parallel::detectCores())
-            rhats_vec <-  Rcpp_outs_split_rhat$diagnostics[,1]  
-            ## Max R-hat:
-            Max_rhat <-  round(max(rhats_vec, na.rm = TRUE), 3)
-            ## Print:
-            print(paste("rhat (max) = ", round(Max_rhat, 3)))
-            
-            
-            #### ---- Compute nested R-hat (if enabled):
-            Max_rhat_nested <- "Nested R-hat not computed for this run"
-            if (is.null(compute_nested_rhat)) { 
-              if (n_chains > 15) {  ## only compute nested R-hat if at least 16 chains are used 
-                compute_nested_rhat <- TRUE
-              } else { 
-                compute_nested_rhat <- TRUE
-              }
-            }
-            ##
-            if (compute_nested_rhat == TRUE) {
-              ## Use BayesMVP helper fn to create superchain ID's (for nested R-hat):
-              superchain_ids <- BayesMVP:::create_superchain_ids(n_superchains = n_superchains,  
-                                                                 n_chains = n_chains)
-              rhats_nested_vec <- c()
-              for (i in 1:n_params_main) {
-                rhats_nested_vec[i] <-   posterior::rhat_nested( array(c(mplus_trace_list[[i]]), dim = c(n_iter, n_chains)), superchain_ids = superchain_ids )
-                #### rhats_vec[i] <-   posterior::rhat( array(c(stan_draws_array[,,index_main_params_adj[i]]), dim = c(iter_sampling, n_chains)) )
-              }
-              Max_rhat_nested <- round(max(rhats_nested_vec, na.rm = TRUE), 3)
-              print(paste("rhat_nested (max) = ", Max_rhat_nested))
-            }
-            ##
-            ess_vec <- unique(ess_vec) ; length(ess_vec)
-            rhats_vec <- unique(rhats_vec) ; length(rhats_vec)
-            rhats_nested_vec <- unique(rhats_nested_vec) ; length(rhats_nested_vec)
-            ##
-            mplus_min_ess <- min(ess_vec, na.rm = TRUE) 
-            mplus_max_rhat <- max(rhats_vec, na.rm = TRUE)
-            mplus_max_n_rhat <- max(rhats_nested_vec, na.rm = TRUE)
-            ##
-            ##
-            mplus_time_total <-  time_mplus_total_inc_csv_inner_numeric # time (total)
-            ##
-            mplus_ess_per_sec_total <- mplus_min_ess / mplus_time_total
-          
-    }
- 
-
-    {
-            
-            
-            #### n_iter <- dim(mplus_posterior_samples[[1]])[1]
-            
-            mplus_posterior_samp_array_merged <- array(dim = c(n_chains * n_iter, dim(mplus_posterior_samp_array)[3] ))
-            
-            
-            
-            i_start = 1
-            i_end = n_iter
-            
-            for (kk in 1:n_chains) {
-              
-                  mplus_posterior_samp_array_merged[i_start:i_end, ] = mplus_posterior_samp_array[kk, , ]
-                  
-                  i_start = i_start + n_iter
-                  i_end = i_end + n_iter
-                  
-            }
-            
-            # n_covariates <- sum(global_list$Model_settings_list$n_covariates_per_outcome_mat) #### BOOKMARK
-            # 
-            # mplus_D_pos_means <- mplus_D_neg_means <-   rep(0, (n_covariates + 1)*n_tests )
-            # mplus_prev_means   <- rep(0, n_class - 1)
-            # 
-            # for (kk in 1:n_chains) {
-            #   mplus_mean <- c()
-            #   for (param in 1:(dim(mplus_posterior_samples[[kk]])[2] - 2)) {
-            #     mplus_mean[param] <- mean(pnorm(mplus_posterior_samp_array_merged[, param]))
-            #   }
-            #   
-            #   #   round(mplus_mean, 2)
-            #   mplus_D_pos <- mplus_mean[21:25]
-            #   mplus_D_neg <- mplus_mean[26:30]
-            #   mplus_prev <-  mplus_mean[31]
-            #   
-            #   mplus_D_pos_means = mplus_D_pos_means + mplus_D_pos
-            #   mplus_D_neg_means = mplus_D_neg_means + mplus_D_neg
-            #   mplus_prev_means = mplus_prev_means + mplus_prev
-            #   
-            # }
-            # 
-            # mplus_D_pos_means <- mplus_D_pos_means / n_chains
-            # mplus_D_neg_means <- mplus_D_neg_means / n_chains
-            # mplus_prev_means <- mplus_prev_means / n_chains
-            # 
-            # print(round(1 - mplus_D_pos_means, 3))
-            # print(round(mplus_D_neg_means, 3))
-            # print(round(mplus_prev_means, 3))
-      
-    }
- 
-
-
-    ## ----- Print info:
-    { 
-      
-                print(paste0("seed = ", seed))
-                ##
-                print(paste0("Min ESS = ", round(mplus_min_ess, 0)))
-                print(paste0("Max R-hat = ", round(mplus_max_rhat, 3)))
-                print(paste0("Max nR-hat = ", round(mplus_max_n_rhat, 3)))
-                ##
-                #### print(paste0("Time (total) = ", round(mplus_time_total, 0), " seconds")) ## BOOKMARK
-                print(paste0("Min ESS / sec (total) = ", round(mplus_ess_per_sec_total , 3)))
-                print(paste0("Min ESS / sec (sampling only)  = ", round(2 *mplus_ess_per_sec_total , 3)))
-                print(paste0("Bin or Ord? = ",  if (max(y) > 1) { print("Ord") } else { print("Bin")} ))
-                ##
-                print(paste("N = ", N))
-                ##
-                print(paste("n_threads = ", n_threads))
-                print(paste("N_chains = ", n_chains))
-                ##
-                print(paste("N_iter (pb) = ",  0.5 * n_fb_iter * n_thin ))
+                fit_mplus <- MplusAutomation::mplusObject( TITLE =   Mplus_settings_list$Model_strings$TITLE,
+                                                           #   DATA = "FILE = Mplus.dat;",
+                                                           USEVARIABLES =   Mplus_settings_list$Model_strings$USEVARIABLES,
+                                                           VARIABLE = Mplus_settings_list$Model_strings$VARIABLE,
+                                                           #    MONTECARLO = paste("SEED = ", seed, ";"), 
+                                                           ANALYSIS = Mplus_settings_list$Model_strings$ANALYSIS,
+                                                           MODEL = Mplus_settings_list$Model_strings$MODEL,
+                                                           MODELPRIORS = Mplus_settings_list$Model_strings$MODELPRIORS,
+                                                           SAVEDATA = Mplus_settings_list$Model_strings$SAVEDATA,
+                                                           rdata = data.frame(df),
+                                                           quiet = FALSE)
                 
-    }
-    
-    #### ---- Model run time ("outer" timer) - using tictoc:
-    {
-      print(tictoc::toc(log = TRUE))
-      log.txt <- tictoc::tic.log(format = TRUE)
-      tictoc::tic.clearlog()
-      time_stan_total_inc_csv_outer <- unlist(log.txt)
-      ##
-      extract_numeric_string <- str_extract(time_stan_total_inc_csv_outer, "\\d+\\.\\d+")   
-      time_mplus_total_inc_csv_outer_numeric <- as.numeric(extract_numeric_string)
-    }
-    
-    mplus_time_total <- time_mplus_total_inc_csv_outer_numeric
-      
-    ## ----- Save file:
-    {
+                res_plus <- MplusAutomation::mplusModeler( fit_mplus,
+                                                           modelout = paste0("mplus_mo=del_seed_", seed, "_N_", N, ".inp"), 
+                                                           writeData = "always",
+                                                           # Mplus_command = "/opt/mplusdemo/",
+                                                           run = 1)
                 
-                #  file_name <- paste0("Mplus_", "efficiency_info_", "seed_", seed, "_",  prior_IW_d, "_", prior_IW_nd,  "prior_IW_", N, "N_", n_chains, "chains_", ".RDS")
+                MplusAutomation::get_results(res_plus, "summaries")
                 
-                Mplus_file_name_string <- paste0(   "Mplus", "_",
-                                                    "computer_", computer, "_",
-                                                    "seed_", seed, "_", 
-                                                    "priorIW", prior_IW_d, "_",   prior_IW_nd,  "_",
-                                                    "N", N, "_",
-                                                    "n_threads", n_threads, "_",
-                                                    "n_chains", n_chains, "_",
-                                                    "n_fb_iter", n_fb_iter, "_",
-                                                    "n_thin", n_thin, "_",
-                                                    ".RDS")
-                 
-                total_time_seconds <- mplus_time_total
-                total_time_mins <- total_time_seconds / 60
-                total_time_hours <- total_time_mins / 60
-                
-                pb_time_seconds <- mplus_time_total / 2
-                pb_time_mins <- pb_time_seconds / 60
-                pb_time_hours <- pb_time_mins / 60
-                
-                Min_ESS_per_sec_total_time <- mplus_ess_per_sec_total
-                Min_ESS_per_sec_pb_time <- Min_ESS_per_sec_total_time * 2
-                
-                file_list <- list(
-                  mplus_max_rhat, round(max(mplus_max_rhat),3),
-                  mplus_max_n_rhat,
-                  mplus_min_ess,
+                #### ---- Model run time ("inner" timer) - using tictoc:
+                {
+                  print(tictoc::toc(log = TRUE))
+                  log.txt <- tictoc::tic.log(format = TRUE)
+                  tictoc::tic.clearlog()
+                  time_stan_total_inc_csv_inner <- unlist(log.txt)
                   ##
-                  total_time_seconds,  total_time_mins, total_time_hours,
-                  pb_time_seconds, pb_time_mins, pb_time_hours,
-                  Min_ESS_per_sec_total_time,
-                  Min_ESS_per_sec_pb_time,
-                  paste("total time =", round(mplus_time_total, 0), "seconds"),
-                  paste("total time =", floor(total_time_mins), "minutes and ", round(((total_time_mins - floor(total_time_mins))*60), 0), "seconds"),
-                  paste("total time =", floor(total_time_hours), "hours and ", round(((total_time_hours - floor(total_time_hours))*60), 0), "minutes"),
-                  paste("Sampling (post-burnin) time =", round(pb_time_seconds, 0), "seconds"),
-                  paste("Sampling (post-burnin) time =", floor(pb_time_mins), "minutes and ", round(((pb_time_mins - floor(pb_time_mins))*60), 0), "seconds"),
-                  paste("Sampling (post-burnin) time =", floor(pb_time_hours), "hours and ", round(((pb_time_hours - floor(pb_time_hours))*60), 0), "minutes"),
-                  paste("Min ESS / sec (total time) = ", round(Min_ESS_per_sec_total_time, 3)),
-                  paste("Min ESS / sec (sampling time only) = ", round(Min_ESS_per_sec_pb_time, 3)), 
-                  mplus_trace_list
-                )
-                # ## Set file name and path:
-                # file_path <- file.path(save_output_directory, file_name)
-                # ## Save as RDS:
-                # saveRDS(object = file_list, file = file_path)
-          
-                ## File name and path:
-                file_name <- paste0("Mplus_outs_", Mplus_file_name_string)
-                file_path <- file.path(save_output_directory, file_name)
-                ## save RDS file:
-                saveRDS(object = file_list, file = file_path)
+                  extract_numeric_string <- str_extract(time_stan_total_inc_csv_inner, "\\d+\\.\\d+")   
+                  time_mplus_total_inc_csv_inner_numeric <- as.numeric(extract_numeric_string)
+                }
                 
-    }
-    
-      list_if_ran_model <- list(Mplus_settings_list = Mplus_settings_list)
-      ##
-      return(list_if_ran_model)
+            
+              
+              {
+                
+                      mplus_posterior_samples <- MplusAutomation::get_bparameters(res_plus)$valid_draw
+                      ## str(mplus_posterior_samples)
+                      ##
+                      mplus_posterior_samp_array <- array(dim = c(n_chains, 
+                                                                  dim(mplus_posterior_samples[[1]])[1], 
+                                                                  dim(mplus_posterior_samples[[1]])[2] - 2))
+                      ##
+                      #  str(mplus_posterior_samp_array)
+                      ##
+                      for (i in 1:n_chains) {
+                        mplus_posterior_samp_array[i, , ] <- mplus_posterior_samples[[i]][,3:(dim(mplus_posterior_samples[[1]])[2])]
+                      }
+                      
+                      
+                      #### ---- Re-format as a list (for main_params ONLY!):
+                      mplus_trace_list <- list()
+                      print(str(mplus_posterior_samp_array))
+                      n_params_mplus <- dim(mplus_posterior_samp_array)[3]
+                      for (i in 1:n_params_mplus) {
+                        ## Take the * transpose * since n_rows must equal n_iter and n_cols must equal n_chains:
+                        mplus_trace_list[[i]] <- t(mplus_posterior_samp_array[,,i])
+                      }
+                      #### str(mplus_trace_list)
+                      
+                      
+                      #### ---- Compute split-ESS using BayesMVP:
+                      Rcpp_outs_split_ESS <- BayesMVP:::Rcpp_compute_MCMC_diagnostics( mcmc_3D_array = mplus_trace_list,
+                                                                                       diagnostic = "split_ESS",
+                                                                                       n_threads = parallel::detectCores())
+                      ess_vec <- Rcpp_outs_split_ESS$diagnostics[,1]
+                      ## Min ESS:
+                      Min_ESS <- round(min(ess_vec, na.rm = TRUE), 0)
+                      ## Print:
+                      print(paste("ESS (min) = ", Min_ESS))
+                    
+                      
+                      #### ---- Compute split-Rhat using BayesMVP:
+                      Rcpp_outs_split_rhat <- BayesMVP:::Rcpp_compute_MCMC_diagnostics( mcmc_3D_array = mplus_trace_list,
+                                                                                        diagnostic = "split_rhat",
+                                                                                        n_threads = parallel::detectCores())
+                      rhats_vec <-  Rcpp_outs_split_rhat$diagnostics[,1]  
+                      ## Max R-hat:
+                      Max_rhat <-  round(max(rhats_vec, na.rm = TRUE), 3)
+                      ## Print:
+                      print(paste("rhat (max) = ", round(Max_rhat, 3)))
+                      
+                      
+                      #### ---- Compute nested R-hat (if enabled):
+                      Max_rhat_nested <- "Nested R-hat not computed for this run"
+                      if (is.null(compute_nested_rhat)) { 
+                        if (n_chains > 15) {  ## only compute nested R-hat if at least 16 chains are used 
+                          compute_nested_rhat <- TRUE
+                        } else { 
+                          compute_nested_rhat <- TRUE
+                        }
+                      }
+                      ##
+                      if (compute_nested_rhat == TRUE) {
+                        ## Use BayesMVP helper fn to create superchain ID's (for nested R-hat):
+                        superchain_ids <- BayesMVP:::create_superchain_ids(n_superchains = n_superchains,  
+                                                                           n_chains = n_chains)
+                        rhats_nested_vec <- c()
+                        for (i in 1:n_params_mplus) {
+                          rhats_nested_vec[i] <-   posterior::rhat_nested( array(c(mplus_trace_list[[i]]), dim = c(n_iter, n_chains)), superchain_ids = superchain_ids )
+                          #### rhats_vec[i] <-   posterior::rhat( array(c(stan_draws_array[,,index_main_params_adj[i]]), dim = c(iter_sampling, n_chains)) )
+                        }
+                        Max_rhat_nested <- round(max(rhats_nested_vec, na.rm = TRUE), 3)
+                        print(paste("rhat_nested (max) = ", Max_rhat_nested))
+                      }
+                      ##
+                      ess_vec <- unique(ess_vec) ; length(ess_vec)
+                      rhats_vec <- unique(rhats_vec) ; length(rhats_vec)
+                      rhats_nested_vec <- unique(rhats_nested_vec) ; length(rhats_nested_vec)
+                      ##
+                      mplus_min_ess <- min(ess_vec, na.rm = TRUE) 
+                      mplus_max_rhat <- max(rhats_vec, na.rm = TRUE)
+                      mplus_max_n_rhat <- max(rhats_nested_vec, na.rm = TRUE)
+                      ##
+                      ##
+                      mplus_time_total <-  time_mplus_total_inc_csv_inner_numeric # time (total)
+                      ##
+                      mplus_ess_per_sec_total <- mplus_min_ess / mplus_time_total
+                    
+              }
+           
+          
+              {
+                      
+          
+                      
+                      dim(mplus_posterior_samp_array)[1]
+                      ##
+                      n_saved_iter_pb <- dim(mplus_posterior_samp_array)[2]
+                      n_saved_iter_all_chains_pb <- n_chains * n_saved_iter_pb
+                      ##
+                      n_saved_params <- dim(mplus_posterior_samp_array)[3]
+                      ##
+                      
+                      # n_saved_params <- dim(mplus_posterior_samp_array)[3]
+                      # n_saved_iter_all_chains_pb <- n_chains * n_saved_iter_pb
+                      mplus_posterior_samp_array_merged <- array(dim = c(n_saved_iter_all_chains_pb,  n_saved_params))
+                      # str(mplus_posterior_samp_array_merged)
+                      
+                      ## Initial values for i_start and i_end:
+                      i_start = 1
+                      i_end = n_saved_iter_pb
+                      ##
+                      for (kk in 1:n_chains) {
+                            
+                                # print(paste("kk = ", kk))
+                                # print(paste("i_start = ", i_start))
+                                # print(paste("i_end = ", i_end))
+                                # 
+                                # print(paste("mplus_posterior_samp_array_merged = "))
+                                # str(mplus_posterior_samp_array_merged)
+                                # 
+                                # print(paste("mplus_posterior_samp_array = "))
+                                # str(mplus_posterior_samp_array)
+                          
+                                mplus_posterior_samp_array_merged[i_start:i_end, ] = mplus_posterior_samp_array[kk, 1:n_saved_iter_pb , ]
+                                
+                                i_start = i_start + n_saved_iter_pb
+                                i_end = i_end + n_saved_iter_pb
+                            
+                      }
+                      
+                      # n_covariates <- sum(global_list$Model_settings_list$n_covariates_per_outcome_mat) #### BOOKMARK
+                      # 
+                      # mplus_D_pos_means <- mplus_D_neg_means <-   rep(0, (n_covariates + 1)*n_tests )
+                      # mplus_prev_means   <- rep(0, n_class - 1)
+                      # 
+                      # for (kk in 1:n_chains) {
+                      #   mplus_mean <- c()
+                      #   for (param in 1:(dim(mplus_posterior_samples[[kk]])[2] - 2)) {
+                      #     mplus_mean[param] <- mean(pnorm(mplus_posterior_samp_array_merged[, param]))
+                      #   }
+                      #   
+                      #   #   round(mplus_mean, 2)
+                      #   mplus_D_pos <- mplus_mean[21:25]
+                      #   mplus_D_neg <- mplus_mean[26:30]
+                      #   mplus_prev <-  mplus_mean[31]
+                      #   
+                      #   mplus_D_pos_means = mplus_D_pos_means + mplus_D_pos
+                      #   mplus_D_neg_means = mplus_D_neg_means + mplus_D_neg
+                      #   mplus_prev_means = mplus_prev_means + mplus_prev
+                      #   
+                      # }
+                      # 
+                      # mplus_D_pos_means <- mplus_D_pos_means / n_chains
+                      # mplus_D_neg_means <- mplus_D_neg_means / n_chains
+                      # mplus_prev_means <- mplus_prev_means / n_chains
+                      # 
+                      # print(round(1 - mplus_D_pos_means, 3))
+                      # print(round(mplus_D_neg_means, 3))
+                      # print(round(mplus_prev_means, 3))
+                
+              }
+           
+          
+          
+              ## ----- Print info:
+              { 
+                
+                          print(paste0("seed = ", seed))
+                          ##
+                          print(paste0("Min ESS = ", round(mplus_min_ess, 0)))
+                          print(paste0("Max R-hat = ", round(mplus_max_rhat, 3)))
+                          print(paste0("Max nR-hat = ", round(mplus_max_n_rhat, 3)))
+                          ##
+                          #### print(paste0("Time (total) = ", round(mplus_time_total, 0), " seconds")) ## BOOKMARK
+                          print(paste0("Min ESS / sec (total) = ", round(mplus_ess_per_sec_total , 3)))
+                          print(paste0("Min ESS / sec (sampling only)  = ", round(2 *mplus_ess_per_sec_total , 3)))
+                          print(paste0("Bin or Ord? = ",  if (max(y) > 1) { print("Ord") } else { print("Bin")} ))
+                          ##
+                          print(paste("N = ", N))
+                          ##
+                          print(paste("n_threads = ", n_threads))
+                          print(paste("N_chains = ", n_chains))
+                          ##
+                          print(paste("N_iter (pb) = ",  0.5 * n_fb_iter * n_thin ))
+                          
+              }
+              
+              #### ---- Model run time ("outer" timer) - using tictoc:
+              {
+                print(tictoc::toc(log = TRUE))
+                log.txt <- tictoc::tic.log(format = TRUE)
+                tictoc::tic.clearlog()
+                time_stan_total_inc_csv_outer <- unlist(log.txt)
+                ##
+                extract_numeric_string <- str_extract(time_stan_total_inc_csv_outer, "\\d+\\.\\d+")   
+                time_mplus_total_inc_csv_outer_numeric <- as.numeric(extract_numeric_string)
+              }
+              
+              mplus_time_total <- time_mplus_total_inc_csv_outer_numeric
+                
+              ## ----- Save file:
+              if (save_full_output == TRUE)  {
+                          
+                          #  file_name <- paste0("Mplus_", "efficiency_info_", "seed_", seed, "_",  prior_IW_d, "_", prior_IW_nd,  "prior_IW_", N, "N_", n_chains, "chains_", ".RDS")
+                          
+                          Mplus_file_name_string <- paste0(   "Mplus", "_",
+                                                              "computer_", computer, "_",
+                                                              "seed_", seed, "_", 
+                                                              "priorIW", prior_IW_d, "_",   prior_IW_nd,  "_",
+                                                              "N", N, "_",
+                                                              "n_threads", n_threads, "_",
+                                                              "n_chains", n_chains, "_",
+                                                              "n_fb_iter", n_fb_iter, "_",
+                                                              "n_thin", n_thin, "_",
+                                                              ".RDS")
+                           
+                          total_time_seconds <- mplus_time_total
+                          total_time_mins <- total_time_seconds / 60
+                          total_time_hours <- total_time_mins / 60
+                          
+                          pb_time_seconds <- mplus_time_total / 2
+                          pb_time_mins <- pb_time_seconds / 60
+                          pb_time_hours <- pb_time_mins / 60
+                          
+                          Min_ESS_per_sec_total_time <- mplus_ess_per_sec_total
+                          Min_ESS_per_sec_pb_time <- Min_ESS_per_sec_total_time * 2
+                          
+                          file_list <- list(
+                            mplus_max_rhat, round(max(mplus_max_rhat),3),
+                            mplus_max_n_rhat,
+                            mplus_min_ess,
+                            ##
+                            total_time_seconds,  total_time_mins, total_time_hours,
+                            pb_time_seconds, pb_time_mins, pb_time_hours,
+                            Min_ESS_per_sec_total_time,
+                            Min_ESS_per_sec_pb_time,
+                            paste("total time =", round(mplus_time_total, 0), "seconds"),
+                            paste("total time =", floor(total_time_mins), "minutes and ", round(((total_time_mins - floor(total_time_mins))*60), 0), "seconds"),
+                            paste("total time =", floor(total_time_hours), "hours and ", round(((total_time_hours - floor(total_time_hours))*60), 0), "minutes"),
+                            paste("Sampling (post-burnin) time =", round(pb_time_seconds, 0), "seconds"),
+                            paste("Sampling (post-burnin) time =", floor(pb_time_mins), "minutes and ", round(((pb_time_mins - floor(pb_time_mins))*60), 0), "seconds"),
+                            paste("Sampling (post-burnin) time =", floor(pb_time_hours), "hours and ", round(((pb_time_hours - floor(pb_time_hours))*60), 0), "minutes"),
+                            paste("Min ESS / sec (total time) = ", round(Min_ESS_per_sec_total_time, 3)),
+                            paste("Min ESS / sec (sampling time only) = ", round(Min_ESS_per_sec_pb_time, 3)), 
+                            mplus_trace_list
+                          )
+                          # ## Set file name and path:
+                          # file_path <- file.path(save_output_directory, file_name)
+                          # ## Save as RDS:
+                          # saveRDS(object = file_list, file = file_path)
+                    
+                          ## File name and path:
+                          file_name <- paste0("Mplus_outs_", Mplus_file_name_string)
+                          file_path <- file.path(save_output_directory, file_name)
+                          ## save RDS file:
+                          saveRDS(object = file_list, file = file_path)
+                          
+              }
+              
+                list_if_ran_model <- list(Mplus_settings_list = Mplus_settings_list)
+                ##
+                return(list_if_ran_model)
     
     }  else { 
       
-      list_if_not_ran_model <- list(Mplus_settings_list = Mplus_settings_list)
-      ##
-      return(list_if_not_ran_model)
+                list_if_not_ran_model <- list(Mplus_settings_list = Mplus_settings_list)
+                ##
+                return(list_if_not_ran_model)
       
     }
     
