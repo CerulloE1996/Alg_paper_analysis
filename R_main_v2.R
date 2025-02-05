@@ -439,55 +439,55 @@
     ##
     str(Stan_data_list)
     
-    for (N in Stan_pilot_study_list$N_sample_sizes_vec_for_Stan) {
-      
-        df_index <- which(Stan_pilot_study_list$N_sample_sizes_vec_for_Stan == N)
-        Stan_data_list_given_current_N <- Stan_data_list[[df_index]]
-      
-        for (n_burnin in Stan_pilot_study_list$n_burnin_vec) {
-          
-            for (i in 1:Stan_pilot_study_list$n_runs) {
-                  # 
-                  # ## For testing:
-                  # {
-                  #     Stan_model_obj = Stan_LC_MVP_model_obj
-                  #     global_list = global_list
-                  #     N_sample_size_of_dataset = N
-                  #     run_number = i
-                  #     save_full_cmdstanr_output = FALSE
-                  #     compute_nested_rhat = NULL
-                  #     MCMC_seed = MCMC_seed
-                  #     n_chains = n_chains
-                  #     n_superchains = NULL
-                  #     n_iter = n_iter
-                  #     n_burnin = n_burnin
-                  #     adapt_delta = 0.80
-                  #     max_treedepth = 10
-                  #     metric_type = "diag_e"
-                  # }
-              
-                  stan_model_outs <- R_fn_run_Stan_model_LC_MVP( Stan_model_obj = Stan_LC_MVP_model_obj,
-                                                                 Stan_data_list_given_current_N = Stan_data_list_given_current_N,
-                                                                 global_list = global_list,
-                                                                 N_sample_size_of_dataset = N,
-                                                                 run_number = i,
-                                                                 save_full_cmdstanr_output = FALSE,
-                                                                 save_output_directory =  Stan_pilot_study_list$output_path,
-                                                                 compute_nested_rhat = NULL,
-                                                                 MCMC_seed = i,
-                                                                 n_chains = Stan_pilot_study_list$n_chains,
-                                                                 n_superchains = Stan_pilot_study_list$n_superchains,
-                                                                 n_iter = Stan_pilot_study_list$n_iter,
-                                                                 n_burnin = n_burnin,
-                                                                 adapt_delta =  Stan_pilot_study_list$adapt_delta,
-                                                                 max_treedepth =  Stan_pilot_study_list$max_treedepth,
-                                                                 metric_type =  Stan_pilot_study_list$metric_type)
-            
-            }
-          
-        }
-      
-    }
+    # for (N in Stan_pilot_study_list$N_sample_sizes_vec_for_Stan) {
+    #   
+    #     df_index <- which(Stan_pilot_study_list$N_sample_sizes_vec_for_Stan == N)
+    #     Stan_data_list_given_current_N <- Stan_data_list[[df_index]]
+    #   
+    #     for (n_burnin in Stan_pilot_study_list$n_burnin_vec) {
+    #       
+    #         for (i in 1:Stan_pilot_study_list$n_runs) {
+    #               # 
+    #               # ## For testing:
+    #               # {
+    #               #     Stan_model_obj = Stan_LC_MVP_model_obj
+    #               #     global_list = global_list
+    #               #     N_sample_size_of_dataset = N
+    #               #     run_number = i
+    #               #     save_full_cmdstanr_output = FALSE
+    #               #     compute_nested_rhat = NULL
+    #               #     MCMC_seed = MCMC_seed
+    #               #     n_chains = n_chains
+    #               #     n_superchains = NULL
+    #               #     n_iter = n_iter
+    #               #     n_burnin = n_burnin
+    #               #     adapt_delta = 0.80
+    #               #     max_treedepth = 10
+    #               #     metric_type = "diag_e"
+    #               # }
+    #           
+    #               stan_model_outs <- R_fn_run_Stan_model_LC_MVP( Stan_model_obj = Stan_LC_MVP_model_obj,
+    #                                                              Stan_data_list_given_current_N = Stan_data_list_given_current_N,
+    #                                                              global_list = global_list,
+    #                                                              N_sample_size_of_dataset = N,
+    #                                                              run_number = i,
+    #                                                              save_full_cmdstanr_output = FALSE,
+    #                                                              save_output_directory =  Stan_pilot_study_list$output_path,
+    #                                                              compute_nested_rhat = NULL,
+    #                                                              MCMC_seed = i,
+    #                                                              n_chains = Stan_pilot_study_list$n_chains,
+    #                                                              n_superchains = Stan_pilot_study_list$n_superchains,
+    #                                                              n_iter = Stan_pilot_study_list$n_iter,
+    #                                                              n_burnin = n_burnin,
+    #                                                              adapt_delta =  Stan_pilot_study_list$adapt_delta,
+    #                                                              max_treedepth =  Stan_pilot_study_list$max_treedepth,
+    #                                                              metric_type =  Stan_pilot_study_list$metric_type)
+    #         
+    #         }
+    #       
+    #     }
+    #   
+    # }
                                                    
     
     #### ---------------------------------------------------------------------------------------------------------------------------------------------------- 
@@ -516,66 +516,71 @@
     ##  NOTE: All pilot studies were run on my local HPC
     ##
     source(file.path(getwd(), "0_utilities/shared_functions/R_fn_run_Mplus_model_LC_MVP.R"))
-    ## Set Mplus pilot study parameters:
-    Mplus_pilot_study_list <- list()
-    ##
-    Mplus_pilot_study_list$Mplus_run_type <- "Mplus_pilot" 
-    ##
-    Mplus_pilot_study_list$output_path <- file.path(getwd(), 
-                                                    "1_appendix_pilot_studies",
-                                                    "ps_5_determining_basic_MCMC_settings_Mplus",
-                                                    "outputs")
-    ##
-    Mplus_pilot_study_list$n_runs_per_N <- 5
-    Mplus_pilot_study_list$n_runs <- Mplus_pilot_study_list$n_runs_per_N
-    ##
-    Mplus_pilot_study_list$WCP <- TRUE
-    ##
-    Mplus_pilot_study_list$n_threads_if_local_HPC_AMD_EPYC <- 64 
-    Mplus_pilot_study_list$n_threads <- min(parallel::detectCores(), Mplus_pilot_study_list$n_threads_if_local_HPC_AMD_EPYC)
-    Mplus_pilot_study_list$deficit_ratio <- round(Mplus_pilot_study_list$n_threads_if_local_HPC_AMD_EPYC/Mplus_pilot_study_list$n_threads)
-    ##
-    if (Mplus_pilot_study_list$WCP == TRUE) {  ## , If using within-chain parallelisation (WCP)
-      
-            Mplus_pilot_study_list$n_chains <- ceil(8/Mplus_pilot_study_list$deficit_ratio)
-            Mplus_pilot_study_list$n_superchains <- ceil(Mplus_pilot_study_list$n_chains / 8)
-            ##   
-            Mplus_pilot_study_list$n_fb_iter = 5000
-            Mplus_pilot_study_list$n_thin = 1
-      
-    } else {     
-            
-            Mplus_pilot_study_list$n_chains <- Mplus_pilot_study_list$n_threads 
-            Mplus_pilot_study_list$n_superchains <- ceil(Mplus_pilot_study_list$n_chains / 8)
-            ##
-            Mplus_pilot_study_list$n_fb_iter = 5000
-            Mplus_pilot_study_list$n_thin = 1
-      
-    }
-    ##
-    # if (Mplus_pilot_study_list$WCP == TRUE) { 
-    #   ## Set # chains and # superchains 
-    #   ## NOTE: We ran all pilot studies on a local HPC with 96 cores, and we used 32 chains/threads for each models run. 
-    #   ## Hence, we set n_chains to min(32, parallel::detectcores()) to accommodate "normal" PC's with less cores. 
-    #   Mplus_pilot_study_list$n_chains <- min(64, parallel::detectCores())
-    #   Mplus_pilot_study_list$n_superchains <- ceil(Mplus_pilot_study_list$n_chains / 8) # E.g. if we have 32 cores then we have 4 superchsins so each superchain has 8 chains (since 4x8 = 32)
-    #   ##
-    #   Mplus_pilot_study_list$n_fb_iter <- 500
-    #   ##
-    # } else { 
-    #   
-    # }
-    
-    { 
-          print(paste("n_threads = ", Mplus_pilot_study_list$n_threads))
-          print(paste("N_chains = ", Mplus_pilot_study_list$n_chains))
-          print(paste("N_iter (pb) = ",  0.5 * Mplus_pilot_study_list$n_fb_iter * Mplus_pilot_study_list$n_thin ))
+    {
+        ## Set Mplus pilot study parameters:
+        Mplus_pilot_study_list <- list()
+        ##
+        Mplus_pilot_study_list$Mplus_run_type <- "Mplus_pilot" 
+        ##
+        Mplus_pilot_study_list$output_path <- file.path(getwd(), 
+                                                        "1_appendix_pilot_studies",
+                                                        "ps_5_determining_basic_MCMC_settings_Mplus",
+                                                        "outputs")
+        ##
+        Mplus_pilot_study_list$n_runs_per_N <- 5
+        Mplus_pilot_study_list$n_runs <- Mplus_pilot_study_list$n_runs_per_N
+        ##
+        Mplus_pilot_study_list$WCP <- TRUE
+        ##
+        Mplus_pilot_study_list$n_threads_if_local_HPC_AMD_EPYC <- 64 
+        Mplus_pilot_study_list$n_threads <- min(parallel::detectCores(), Mplus_pilot_study_list$n_threads_if_local_HPC_AMD_EPYC)
+        Mplus_pilot_study_list$deficit_ratio <- round(Mplus_pilot_study_list$n_threads_if_local_HPC_AMD_EPYC/Mplus_pilot_study_list$n_threads)
+        ##
+        if (Mplus_pilot_study_list$WCP == TRUE) {  ## , If using within-chain parallelisation (WCP)
+          
+                Mplus_pilot_study_list$n_chains <- ceil(8/Mplus_pilot_study_list$deficit_ratio)
+                Mplus_pilot_study_list$n_superchains <- ceil(Mplus_pilot_study_list$n_chains / 8)
+                ##   
+                Mplus_pilot_study_list$n_fb_iter = 5000
+                Mplus_pilot_study_list$n_thin = 1
+          
+        } else {     
+                
+                Mplus_pilot_study_list$n_chains <- Mplus_pilot_study_list$n_threads 
+                Mplus_pilot_study_list$n_superchains <- ceil(Mplus_pilot_study_list$n_chains / 8)
+                ##
+                Mplus_pilot_study_list$n_fb_iter = 5000
+                Mplus_pilot_study_list$n_thin = 1
+          
+        }
+        ##
+        # if (Mplus_pilot_study_list$WCP == TRUE) { 
+        #   ## Set # chains and # superchains 
+        #   ## NOTE: We ran all pilot studies on a local HPC with 96 cores, and we used 32 chains/threads for each models run. 
+        #   ## Hence, we set n_chains to min(32, parallel::detectcores()) to accommodate "normal" PC's with less cores. 
+        #   Mplus_pilot_study_list$n_chains <- min(64, parallel::detectCores())
+        #   Mplus_pilot_study_list$n_superchains <- ceil(Mplus_pilot_study_list$n_chains / 8) # E.g. if we have 32 cores then we have 4 superchsins so each superchain has 8 chains (since 4x8 = 32)
+        #   ##
+        #   Mplus_pilot_study_list$n_fb_iter <- 500
+        #   ##
+        # } else { 
+        #   
+        # }
         
+        { 
+              print(paste("n_threads = ", Mplus_pilot_study_list$n_threads))
+              print(paste("N_chains = ", Mplus_pilot_study_list$n_chains))
+              print(paste("N_iter (pb) = ",  0.5 * Mplus_pilot_study_list$n_fb_iter * Mplus_pilot_study_list$n_thin ))
+            
+        }
+          
+        ##
+        Mplus_pilot_study_list$N_sample_sizes_vec_for_Mplus <- global_list$N_sample_sizes_vec[1:6]  ## BOOKMARK: All 6 N's for Mplus (???)
+        ##
+    
     }
-      
-    ##
-    Mplus_pilot_study_list$N_sample_sizes_vec_for_Mplus <- global_list$N_sample_sizes_vec[1:6]  ## BOOKMARK: All 6 N's for Mplus (???)
-    ##
+    
+    
     for (N in Mplus_pilot_study_list$N_sample_sizes_vec_for_Mplus) {
         
         for (i in 1:Mplus_pilot_study_list$n_runs) {
@@ -740,70 +745,74 @@
   
     #### -------  Compile BayesMVP (using Stan model / .stan file!) model + Set custom C++ flags for Stan model    ---------------------------------------------- 
     source(file.path(getwd(), "0_utilities/shared_functions/R_fn_compile_BayesMVP_model.R"))
-    ##
-    ## Compile Stan model using custom optimised C++ flags (to make "fairer" comparison with BayesMVP):
-    #### Stan_model_file_path <-   file.path(getwd(), "0_utilities/stan_models/LC_MVP_bin_PartialLog_v5.stan")
-    Stan_model_file_path <-  system.file(package = "BayesMVP", file = "stan_models/LC_MVP_bin_PartialLog_v5.stan" )
-    ##
-    Stan_data_list <- R_fn_prep_Stan_binary_data(global_list = global_list)
-    ## outputs list is lists, where each outer-most list is for each of the different N:
-    str(Stan_data_list)
-    
-    ## Use same cpp flags to compile the Stan model as we used for Stan pilot study / Stan models:
-    set_custom_optimised_CXX_CPP_flags <- TRUE
-    cmdstan_cpp_flags_if_using_Stan_model <-  Stan_settings_list$cpp_flags
-    
-    BayesMVP_compile_LC_MVP_model_using_Stan_file_outs_list <- R_fn_compile_BayesMVP_model( BayesMVP_Model_type = "Stan", 
-                                                                                            set_custom_optimised_CXX_CPP_flags = set_custom_optimised_CXX_CPP_flags,
-                                                                                            cmdstan_cpp_flags_if_using_Stan_model = Stan_settings_list$cpp_flags,
-                                                                                            global_list = global_list,
-                                                                                            Stan_data_list = Stan_data_list, 
-                                                                                            Stan_model_file_path = Stan_model_file_path,
-                                                                                            N_sample_size_of_dataset = 500, ## Dummy/can change later but needed for compilation
-                                                                                            sample_nuisance = TRUE, ## Dummy/can change later but needed for compilation
-                                                                                            CCACHE_PATH = "/usr/bin/ccache")
-    
-    str(Stan_data_list)
-    
-    # ## Check flags used:
-    # stan_compile_LC_MVP_model_outs_list$FLAGS_STANDARD_MACROS
-    # stan_compile_LC_MVP_model_outs_list$FLAGS_CUSTOM_MACROS
-    ## Print the Stan model:
-    BayesMVP_LC_MVP_model_using_Stan_file_obj <- BayesMVP_compile_LC_MVP_model_using_Stan_file_outs_list$model_obj
-    #### model_args_list <- BayesMVP_compile_LC_MVP_model_using_Stan_file_outs_list$model_args_list
-    Stan_data_list <- BayesMVP_compile_LC_MVP_model_using_Stan_file_outs_list$Stan_data_list
-    init_lists_per_chain <- BayesMVP_compile_LC_MVP_model_using_Stan_file_outs_list$init_lists_per_chain
-    
-    #### -------  Compile BayesMVP (using MANUAL-GRADIENTS LC_MVP model, i.e., BUILT-IN MODEL)   ---------------------------------------------------------------- 
-    source(file.path(getwd(), "0_utilities/shared_functions/R_fn_compile_BayesMVP_model.R"))
-    ##
-    # ## For debug:
-    # BayesMVP_Model_type = "LC_MVP"
-    # set_custom_CXX_CPP_flags_if_using_Stan_model = FALSE
-    # global_list = global_list
-    # Stan_data_list = Stan_data_list
-    # N_sample_size_of_dataset = 500
-    # sample_nuisance = TRUE
-    # CCACHE_PATH = "/usr/bin/ccache"
-  
-    ## NOTE:  manual-gradient model so use the flags used during installation
-    BayesMVP_compile_LC_MVP_model_using_manual_grad_outs_list <- R_fn_compile_BayesMVP_model( BayesMVP_Model_type = "LC_MVP", 
-                                                                                              set_custom_optimised_CXX_CPP_flags = FALSE, 
-                                                                                              cmdstan_cpp_flags_if_using_Stan_model = NULL,
+    {
+      ##
+      ## Compile Stan model using custom optimised C++ flags (to make "fairer" comparison with BayesMVP):
+      #### Stan_model_file_path <-   file.path(getwd(), "0_utilities/stan_models/LC_MVP_bin_PartialLog_v5.stan")
+      Stan_model_file_path <-  system.file(package = "BayesMVP", file = "stan_models/LC_MVP_bin_PartialLog_v5.stan" )
+      ##
+      Stan_data_list <- R_fn_prep_Stan_binary_data(global_list = global_list)
+      ## outputs list is lists, where each outer-most list is for each of the different N:
+      str(Stan_data_list)
+      
+      ## Use same cpp flags to compile the Stan model as we used for Stan pilot study / Stan models:
+      set_custom_optimised_CXX_CPP_flags <- TRUE
+      cmdstan_cpp_flags_if_using_Stan_model <-  Stan_settings_list$cpp_flags
+      
+      BayesMVP_compile_LC_MVP_model_using_Stan_file_outs_list <- R_fn_compile_BayesMVP_model( BayesMVP_Model_type = "Stan", 
+                                                                                              set_custom_optimised_CXX_CPP_flags = set_custom_optimised_CXX_CPP_flags,
+                                                                                              cmdstan_cpp_flags_if_using_Stan_model = Stan_settings_list$cpp_flags,
                                                                                               global_list = global_list,
                                                                                               Stan_data_list = Stan_data_list, 
+                                                                                              Stan_model_file_path = Stan_model_file_path,
                                                                                               N_sample_size_of_dataset = 500, ## Dummy/can change later but needed for compilation
                                                                                               sample_nuisance = TRUE, ## Dummy/can change later but needed for compilation
                                                                                               CCACHE_PATH = "/usr/bin/ccache")
+      
+      str(Stan_data_list)
+      
+      # ## Check flags used:
+      # stan_compile_LC_MVP_model_outs_list$FLAGS_STANDARD_MACROS
+      # stan_compile_LC_MVP_model_outs_list$FLAGS_CUSTOM_MACROS
+      ## Print the Stan model:
+      BayesMVP_LC_MVP_model_using_Stan_file_obj <- BayesMVP_compile_LC_MVP_model_using_Stan_file_outs_list$model_obj
+      #### model_args_list <- BayesMVP_compile_LC_MVP_model_using_Stan_file_outs_list$model_args_list
+      Stan_data_list <- BayesMVP_compile_LC_MVP_model_using_Stan_file_outs_list$Stan_data_list
+      init_lists_per_chain <- BayesMVP_compile_LC_MVP_model_using_Stan_file_outs_list$init_lists_per_chain
+    }
     
-    # ## Check flags used:
-    # stan_compile_LC_MVP_model_outs_list$FLAGS_STANDARD_MACROS
-    # stan_compile_LC_MVP_model_outs_list$FLAGS_CUSTOM_MACROS
-    ## Print the Stan model:
-    BayesMVP_LC_MVP_model_using_manual_grad_obj <- BayesMVP_compile_LC_MVP_model_using_manual_grad_outs_list$model_obj
-    model_args_list <- BayesMVP_LC_MVP_model_using_manual_grad_obj$model_args_list
-    #### Stan_data_list <- BayesMVP_LC_MVP_model_using_manual_grad_obj$Stan_data_list
-    init_lists_per_chain <- BayesMVP_LC_MVP_model_using_manual_grad_obj$init_lists_per_chain
+    #### -------  Compile BayesMVP (using MANUAL-GRADIENTS LC_MVP model, i.e., BUILT-IN MODEL)   ---------------------------------------------------------------- 
+    source(file.path(getwd(), "0_utilities/shared_functions/R_fn_compile_BayesMVP_model.R"))
+    {
+      ##
+      # ## For debug:
+      # BayesMVP_Model_type = "LC_MVP"
+      # set_custom_CXX_CPP_flags_if_using_Stan_model = FALSE
+      # global_list = global_list
+      # Stan_data_list = Stan_data_list
+      # N_sample_size_of_dataset = 500
+      # sample_nuisance = TRUE
+      # CCACHE_PATH = "/usr/bin/ccache"
+    
+      ## NOTE:  manual-gradient model so use the flags used during installation
+      BayesMVP_compile_LC_MVP_model_using_manual_grad_outs_list <- R_fn_compile_BayesMVP_model( BayesMVP_Model_type = "LC_MVP", 
+                                                                                                set_custom_optimised_CXX_CPP_flags = FALSE, 
+                                                                                                cmdstan_cpp_flags_if_using_Stan_model = NULL,
+                                                                                                global_list = global_list,
+                                                                                                Stan_data_list = Stan_data_list, 
+                                                                                                N_sample_size_of_dataset = 500, ## Dummy/can change later but needed for compilation
+                                                                                                sample_nuisance = TRUE, ## Dummy/can change later but needed for compilation
+                                                                                                CCACHE_PATH = "/usr/bin/ccache")
+      
+      # ## Check flags used:
+      # stan_compile_LC_MVP_model_outs_list$FLAGS_STANDARD_MACROS
+      # stan_compile_LC_MVP_model_outs_list$FLAGS_CUSTOM_MACROS
+      ## Print the Stan model:
+      BayesMVP_LC_MVP_model_using_manual_grad_obj <- BayesMVP_compile_LC_MVP_model_using_manual_grad_outs_list$model_obj
+      model_args_list <- BayesMVP_LC_MVP_model_using_manual_grad_obj$model_args_list
+      #### Stan_data_list <- BayesMVP_LC_MVP_model_using_manual_grad_obj$Stan_data_list
+      init_lists_per_chain <- BayesMVP_LC_MVP_model_using_manual_grad_obj$init_lists_per_chain
+    }
     
     #### -------   Run BayesMVP (NUTS-HMC) Pilot Study (Note: All pilot studies were run on my local HPC) --------------------------------------------------------- 
     source(file.path(getwd(), "0_utilities/shared_functions/R_fn_run_BayesMVP_model_LC_MVP.R"))
@@ -871,78 +880,84 @@
                                                
                                                
                                                
-    for (N in BayesMVP_pilot_study_list$N_sample_sizes_vec_for_BayesMVP) {
-      
-      ## Stan_data_list_given_current_N <- Stan_data_list[[df_index]]
-      
-      for (n_burnin in BayesMVP_pilot_study_list$n_burnin_vec) {
-        
-        for (i in 1:BayesMVP_pilot_study_list$n_runs) {
-          
-          # ## For testing: 
-          # {
-          #     global_list = global_list
-          #     N_sample_size_of_dataset = N
-          #     run_number = run_number
-          #     save_full_cmdstanr_output = FALSE
-          #     compute_nested_rhat = NULL
-          #     MCMC_seed = MCMC_seed
-          #     n_chains = n_chains
-          #     n_superchains = NULL
-          #     n_iter = n_iter
-          #     n_burnin = n_burnin
-          #     adapt_delta = 0.80
-          #     max_treedepth = 10
-          #     metric_type = "diag_e"
-          # }
-          
-          if (manual_gradients == TRUE) { 
-            BayesMVP_model_obj <- BayesMVP_LC_MVP_model_using_manual_grad_obj
-          } else if (manual_gradients == FALSE) { ## Using Stan model file
-            BayesMVP_model_obj <- BayesMVP_LC_MVP_model_using_Stan_file_obj
-          }
-          
-          n_burnin = 500 ## 250 burnin not working for u's !! probably need high LR ?! 
-          
-          run_type <- "misc"
-          
-          ## BayesMVP_LC_MVP_model_using_Stan_file_obj
-          ## BayesMVP_LC_MVP_model_using_manual_grad_obj
-          BayesMVP_model_outs <- R_fn_run_BayesMVP_model_LC_MVP( computer = computer,
-                                                                 run_type = run_type,
-                                                                 BayesMVP_model_obj = BayesMVP_model_obj,
-                                                                 BayesMVP_settings_list = BayesMVP_pilot_study_list,
-                                                                 global_list = global_list,
-                                                                 Stan_data_list = Stan_data_list,
-                                                                 ##
-                                                                 manual_gradients = manual_gradients,
-                                                                 SIMD_vect_type = "AVX2",
-                                                                 partitioned_HMC = TRUE,
-                                                                 diffusion_HMC = TRUE,
-                                                                 ##
-                                                                 N_sample_size_of_dataset = N,
-                                                                 run_number = i,
-                                                                 save_output_directory =  BayesMVP_pilot_study_list$output_path,
-                                                                 save_full_output = TRUE,
-                                                                 compute_nested_rhat = TRUE,
-                                                                 save_log_lik_trace = FALSE,
-                                                                 compute_transformed_parameters = TRUE,
-                                                                 compute_generated_quantities = TRUE,
-                                                                 ##
-                                                                 MCMC_seed = i,
-                                                                 n_chains_burnin = n_chains_burnin,
-                                                                 n_chains_sampling = n_chains_sampling,
-                                                                 n_superchains = n_superchains,
-                                                                 n_iter = n_iter,
-                                                                 n_burnin = n_burnin)
-                                                           
-          
-        }
-        
-      }
-      
-    }
-    
+    # for (N in BayesMVP_pilot_study_list$N_sample_sizes_vec_for_BayesMVP) {
+    #   
+    #   ## Stan_data_list_given_current_N <- Stan_data_list[[df_index]]
+    #   
+    #   for (n_burnin in BayesMVP_pilot_study_list$n_burnin_vec) {
+    #     
+    #     for (i in 1:BayesMVP_pilot_study_list$n_runs) {
+    #       
+    #       # ## For testing: 
+    #       # {
+    #       #     global_list = global_list
+    #       #     N_sample_size_of_dataset = N
+    #       #     run_number = run_number
+    #       #     save_full_cmdstanr_output = FALSE
+    #       #     compute_nested_rhat = NULL
+    #       #     MCMC_seed = MCMC_seed
+    #       #     n_chains = n_chains
+    #       #     n_superchains = NULL
+    #       #     n_iter = n_iter
+    #       #     n_burnin = n_burnin
+    #       #     adapt_delta = 0.80
+    #       #     max_treedepth = 10
+    #       #     metric_type = "diag_e"
+    #       # }
+    #       
+    #       if (manual_gradients == TRUE) { 
+    #         BayesMVP_model_obj <- BayesMVP_LC_MVP_model_using_manual_grad_obj
+    #       } else if (manual_gradients == FALSE) { ## Using Stan model file
+    #         BayesMVP_model_obj <- BayesMVP_LC_MVP_model_using_Stan_file_obj
+    #       }
+    #       
+    #       n_burnin = 500 ## 250 burnin not working for u's !! probably need high LR ?! 
+    #       
+    #       run_type <- "misc"
+    #       
+    #       if (computer == "Laptop")  { 
+    #         SIMD_vect_type <- "AVX2"
+    #       } else { 
+    #         SIMD_vect_type <- "AVX512"
+    #       }
+    #       
+    #       ## BayesMVP_LC_MVP_model_using_Stan_file_obj
+    #       ## BayesMVP_LC_MVP_model_using_manual_grad_obj
+    #       BayesMVP_model_outs <- R_fn_run_BayesMVP_model_LC_MVP( computer = computer,
+    #                                                              run_type = run_type,
+    #                                                              BayesMVP_model_obj = BayesMVP_model_obj,
+    #                                                              BayesMVP_settings_list = BayesMVP_pilot_study_list,
+    #                                                              global_list = global_list,
+    #                                                              Stan_data_list = Stan_data_list,
+    #                                                              ##
+    #                                                              manual_gradients = manual_gradients,
+    #                                                              SIMD_vect_type = SIMD_vect_type,
+    #                                                              partitioned_HMC = TRUE,
+    #                                                              diffusion_HMC = TRUE,
+    #                                                              ##
+    #                                                              N_sample_size_of_dataset = N,
+    #                                                              run_number = i,
+    #                                                              save_output_directory =  BayesMVP_pilot_study_list$output_path,
+    #                                                              save_full_output = TRUE,
+    #                                                              compute_nested_rhat = TRUE,
+    #                                                              save_log_lik_trace = FALSE,
+    #                                                              compute_transformed_parameters = TRUE,
+    #                                                              compute_generated_quantities = TRUE,
+    #                                                              ##
+    #                                                              MCMC_seed = i,
+    #                                                              n_chains_burnin = n_chains_burnin,
+    #                                                              n_chains_sampling = n_chains_sampling,
+    #                                                              n_superchains = n_superchains,
+    #                                                              n_iter = n_iter,
+    #                                                              n_burnin = n_burnin)
+    #                                                        
+    #       
+    #     }
+    #     
+    #   }
+    #   
+    # }
+    # 
     
     
     
@@ -1069,9 +1084,9 @@
     ### Now, based on table 1 and plot 1 above - we can choose the optimal number of threads to use for the local HPC and laptop, for each N
     # chosen_n_threads_Laptop = 8,
     # chosen_n_threads_HPC = 64,
-    ##
-    tibble_showing_optimal_n_chunks_per_N_for_HPC
-    tibble_showing_optimal_n_chunks_per_N_for_Laptop
+    # ##
+    # tibble_showing_optimal_n_chunks_per_N_for_HPC
+    # tibble_showing_optimal_n_chunks_per_N_for_Laptop
    
 
     
@@ -1126,14 +1141,14 @@
     
     ## Set other variables: 
     pilot_study_parallel_scaling_comp_list$n_runs <- 10
-    pilot_study_parallel_scaling_comp_list$start_index <- 1 
+    pilot_study_parallel_scaling_comp_list$start_index <- 1
     pilot_study_parallel_scaling_comp_list$N_vec <- BayesMVP_pilot_study_list$N_sample_sizes_vec_for_BayesMVP
     ##
     ## Only run the manual-gradient BayesMVP LC_MVP model at the optimal # of chunks found from ps1 + 1 chunk (as a reference/"baseline"), for each N:
     {
       ##
       N_vec <- pilot_study_opt_N_chunks_list$N_vec
-      ## HPC tibble from ps1 needed:
+      ## Local_HPC tibble from ps1 needed:
       tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_HPC <- 
                     pilot_study_opt_N_chunks_list$plots_and_table_outs$tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_HPC 
       ## Laptop tibble from ps1 needed:
@@ -1148,16 +1163,16 @@
               ##
               N_current <- N
               ##
-              ## First for the HPC:
+              ## First for the Local_HPC:
               subset_temp_given_N <- tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_HPC %>%
                                      dplyr::filter(near(N, N_current), n_threads == pilot_study_parallel_scaling_comp_list$n_threads_vec_for_Local_HPC)
               ##
               opt_n_chunks_given_N <- as.numeric(as.character(subset_temp_given_N$n_chunks))
               ##
-              pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$HPC[[as.character(N_current)]] <- opt_n_chunks_given_N
+              pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$Local_HPC[[as.character(N_current)]] <- opt_n_chunks_given_N
               ##
-              temp <- pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$HPC[[as.character(N_current)]]
-              pilot_study_parallel_scaling_comp_list$n_chunks_vecs$HPC[[as.character(N_current)]] <-   c(1, temp)
+              temp <- pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$Local_HPC[[as.character(N_current)]]
+              pilot_study_parallel_scaling_comp_list$n_chunks_vecs$Local_HPC[[as.character(N_current)]] <-   c(1, temp)
               ##
               ## Then for the laptop:
               subset_temp_given_N <- tibble_2_showing_optimal_n_chunks_and_n_threads_combo_per_N_for_Laptop %>%
@@ -1171,9 +1186,9 @@
               pilot_study_parallel_scaling_comp_list$n_chunks_vecs$Laptop[[as.character(N_current)]] <-   c(1, temp)
               ##
       }
-      ## Check for HPC:
-      pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$HPC
-      pilot_study_parallel_scaling_comp_list$n_chunks_vecs$HPC
+      ## Check for Local_HPC:
+      pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$Local_HPC
+      pilot_study_parallel_scaling_comp_list$n_chunks_vecs$Local_HPC
       ## Check for Laptop:
       pilot_study_parallel_scaling_comp_list$opt_n_chunks_at_opt_n_threads$Laptop
       pilot_study_parallel_scaling_comp_list$n_chunks_vecs$Laptop
@@ -1206,22 +1221,21 @@
     
     ## Run the pilot study (if not already run and/or don't have results/output files):
     ##
-    # algorithm <- "MD_BayesMVP"
-    algorithm <- "AD_BayesMVP_Stan"
-    ## algorithm <- "Mplus_WCP"
-    # algorithm <- "Mplus_WCP"
+    ## algorithm <- "MD_BayesMVP"
+    ## algorithm <- "AD_BayesMVP_Stan"
+    ##  algorithm <- "Mplus_WCP"
+    algorithm <- "Mplus_standard"
     ##
-    # {
-    #   pilot_study_parallel_scaling_comp_list = pilot_study_parallel_scaling_comp_list
-    #   computer = "Laptop"
-    #   algorithm = algorithm
-    #   BayesMVP_manual_gradient_model_obj = BayesMVP_LC_MVP_model_using_manual_grad_obj
-    #   BayesMVP_using_Stan_file_model_obj = BayesMVP_LC_MVP_model_using_Stan_file_obj
-    #   global_list = global_list
-    #   Stan_data_list = Stan_data_list
-    #   Mplus_settings_list = Mplus_settings_list
-    #   output_path  = pilot_study_parallel_scaling_comp_list$output_path
-    # }
+    {
+      pilot_study_parallel_scaling_comp_list = pilot_study_parallel_scaling_comp_list
+      algorithm = algorithm
+      BayesMVP_manual_gradient_model_obj = BayesMVP_LC_MVP_model_using_manual_grad_obj
+      BayesMVP_using_Stan_file_model_obj = BayesMVP_LC_MVP_model_using_Stan_file_obj
+      global_list = global_list
+      Stan_data_list = Stan_data_list
+      Mplus_settings_list = Mplus_settings_list
+      output_path  = pilot_study_parallel_scaling_comp_list$output_path
+    }
     
     ##
     path_ps2 <- file.path(getwd(), "1_appendix_pilot_studies", "ps_2_parallel_scaling_vs_Mplus_Stan")
