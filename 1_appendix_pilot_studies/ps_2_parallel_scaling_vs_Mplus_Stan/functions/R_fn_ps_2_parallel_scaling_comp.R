@@ -72,13 +72,6 @@ R_fn_RUN_ps_parallel_scaling_comp <- function(     pilot_study_parallel_scaling_
     metric_shape_main <- "dense"
     ##
  
-    # algorithm <- "MD_BayesMVP" ;  test_fn = TRUE
-    # #    algorithm <- "MD_BayesMVP" ;  test_fn = FALSE
-    # #   algorithm <- "AD_BayesMVP_Stan"
-    # #   algorithm <- "Mplus_standard"
-    # #  algorithm <- "Mplus_WCP"
-  
- 
     ## Use "baseline" path length of 16 (with manual-gradient LC_MVP BayesMVP model as the baseline):
     L_main <- 16
     
@@ -108,72 +101,79 @@ R_fn_RUN_ps_parallel_scaling_comp <- function(     pilot_study_parallel_scaling_
 ## -----------------------
 for (df_index in start_index:length(pilot_study_parallel_scaling_comp_list$N_vec[!is.na(pilot_study_parallel_scaling_comp_list$N_vec)]))  {
   
-      N <- pilot_study_parallel_scaling_comp_list$N_vec[df_index]
-      n_nuisance <- N * n_tests
-      ## Print:
-      print(paste("N = ", N))
-      print(paste("n_nuisance = ", n_nuisance))
-      ##
+      {
         
-      if (Mplus_ind == FALSE) {
-              
-              ## Get Rcpp / C++ lists:
-              Model_args_as_Rcpp_List <- BayesMVP_model_obj$init_object$Model_args_as_Rcpp_List
-              Model_args_as_Rcpp_List$N <- N
-              Model_args_as_Rcpp_List$n_nuisance <- n_nuisance
-              ##
-              EHMC_args_as_Rcpp_List <- BayesMVP:::init_EHMC_args_as_Rcpp_List(diffusion_HMC = diffusion_HMC)
-              ## Edit entries to ensure don't get divergences - but also ensure suitable L chosen:
-              EHMC_args_as_Rcpp_List$eps_main <- 0.0001
-              EHMC_args_as_Rcpp_List$tau_main <-     L_main * EHMC_args_as_Rcpp_List$eps_main 
-              ## Metric Rcpp / C++ list::
-              EHMC_Metric_as_Rcpp_List <- BayesMVP:::init_EHMC_Metric_as_Rcpp_List(   n_params_main = n_params_main, 
-                                                                                      n_nuisance = n_nuisance, 
-                                                                                      metric_shape_main = metric_shape_main)  
-              
-              if (algorithm == "MD_BayesMVP") {
-                
-                  ## Assign SIMD_vect_type:
-                  Model_args_as_Rcpp_List$Model_args_strings[c("vect_type",
-                                                               "vect_type_exp", "vect_type_log", "vect_type_lse", "vect_type_tanh", 
-                                                               "vect_type_Phi", "vect_type_log_Phi", "vect_type_inv_Phi", 
-                                                               "vect_type_inv_Phi_approx_from_logit_prob"), ] <-  pilot_study_parallel_scaling_comp_list$SIMD_vect_type 
-              
-                  for (c in 1:n_class) {
-                    for (t in 1:n_tests) {
-                      Model_args_as_Rcpp_List$Model_args_2_later_vecs_of_mats_double[[1]][[c]][[t]] <- matrix(1, nrow = N, ncol = 1)
-                    }
+          N <- pilot_study_parallel_scaling_comp_list$N_vec[df_index]
+          n_nuisance <- N * n_tests
+          ## Print:
+          print(paste("N = ", N))
+          print(paste("n_nuisance = ", n_nuisance))
+          ##
+        
+            
+          if (Mplus_ind == FALSE) {
+                  
+                  ## Get Rcpp / C++ lists:
+                  Model_args_as_Rcpp_List <- BayesMVP_model_obj$init_object$Model_args_as_Rcpp_List
+                  Model_args_as_Rcpp_List$N <- N
+                  Model_args_as_Rcpp_List$n_nuisance <- n_nuisance
+                  ##
+                  EHMC_args_as_Rcpp_List <- BayesMVP:::init_EHMC_args_as_Rcpp_List(diffusion_HMC = diffusion_HMC)
+                  ## Edit entries to ensure don't get divergences - but also ensure suitable L chosen:
+                  EHMC_args_as_Rcpp_List$eps_main <- 0.0001
+                  EHMC_args_as_Rcpp_List$tau_main <-     L_main * EHMC_args_as_Rcpp_List$eps_main 
+                  ## Metric Rcpp / C++ list::
+                  EHMC_Metric_as_Rcpp_List <- BayesMVP:::init_EHMC_Metric_as_Rcpp_List(   n_params_main = n_params_main, 
+                                                                                          n_nuisance = n_nuisance, 
+                                                                                          metric_shape_main = metric_shape_main)  
+                  
+                  if (algorithm == "MD_BayesMVP") {
+                    
+                      ## Assign SIMD_vect_type:
+                      Model_args_as_Rcpp_List$Model_args_strings[c("vect_type",
+                                                                   "vect_type_exp", "vect_type_log", "vect_type_lse", "vect_type_tanh", 
+                                                                   "vect_type_Phi", "vect_type_log_Phi", "vect_type_inv_Phi", 
+                                                                   "vect_type_inv_Phi_approx_from_logit_prob"), ] <-  pilot_study_parallel_scaling_comp_list$SIMD_vect_type 
+                  
+                      for (c in 1:n_class) {
+                        for (t in 1:n_tests) {
+                          Model_args_as_Rcpp_List$Model_args_2_later_vecs_of_mats_double[[1]][[c]][[t]] <- matrix(1, nrow = N, ncol = 1)
+                        }
+                      }
+                      
+                      n_chunks_vec <- pilot_study_parallel_scaling_comp_list$n_chunks_vecs[[as.character(computer)]][[as.character(N)]]
+                      
+                  } else { 
+                  
+                     Stan_data_list_given_current_N <- Stan_data_list[[df_index]]
+                     BayesMVP_model_obj$Stan_data_list <- Stan_data_list_given_current_N
+                     ##
+                     cmdstanr::write_stan_json(data = Stan_data_list_given_current_N, file = Model_args_as_Rcpp_List$json_file_path)
+                     ##
+                     print(str(Stan_data_list_given_current_N))
+                     
                   }
                   
-                  n_chunks_vec <- pilot_study_parallel_scaling_comp_list$n_chunks_vecs[[as.character(computer)]][[as.character(N)]]
-                  
-              } else { 
-              
-                 Stan_data_list_given_current_N <- Stan_data_list[[df_index]]
-                 BayesMVP_model_obj$Stan_data_list <- Stan_data_list_given_current_N
-                 ##
-                 cmdstanr::write_stan_json(data = Stan_data_list_given_current_N, file = Model_args_as_Rcpp_List$json_file_path)
-                 ##
-                 print(str(Stan_data_list_given_current_N))
-                 
-              }
-              
-      }
+          }
+          
+          N_iter <- pilot_study_opt_N_chunks_list$n_iter_given_N[[as.character(N)]] ## use same N_iter as ps_1
+       
+          if (algorithm == "MD_BayesMVP")  { 
+            n_chunks_vec <- n_chunks_vec
+          } else if   (algorithm == "AD_BayesMVP_Stan")  { 
+            n_chunks_vec <- c(1)
+          } else {  ## Mplus
+            n_chunks_vec <- c(1)
+          }
+     
+          kkk = 1
       
-      N_iter <- pilot_study_opt_N_chunks_list$n_iter_given_N[[as.character(N)]] ## use same N_iter as ps_1
-   
-      if (algorithm == "MD_BayesMVP")  { 
-        n_chunks_vec <- n_chunks_vec
-      } else if   (algorithm == "AD_BayesMVP_Stan")  { 
-        n_chunks_vec <- c(1)
-      } else {  ## Mplus
-        n_chunks_vec <- c(1)
       }
- 
-      kkk = 1
+  
   ## -----------------------
   for (kkk in 1:length(n_chunks_vec))  {
     
+    {
         ## Set the number of chunks to use in model_args_list:
         num_chunks <- n_chunks_vec[kkk]
         
@@ -182,6 +182,8 @@ for (df_index in start_index:length(pilot_study_parallel_scaling_comp_list$N_vec
         }
  
         iii = 1
+    }
+    
     ## -----------------------
     for (iii in 1:pilot_study_opt_N_chunks_list$n_runs) {
       
@@ -206,13 +208,15 @@ for (df_index in start_index:length(pilot_study_parallel_scaling_comp_list$N_vec
        ## Set timer for the iii-th run:
        tictoc::tic("timer")
 
-       ## Set number of ** sampling ** chains:
+       ## Set number of ** sampling ** threads / chains:
        n_threads <-  pilot_study_opt_N_chunks_list$n_threads_vec[jj]
        n_chains_sampling <- n_threads
        n_superchains <- n_chains_sampling
        ## Print info:
-       print(paste("n_threads = ", n_threads))
-       print(paste("n_chains_sampling = ", n_chains_sampling))
+       if (Mplus_ind == FALSE) {
+         print(paste("n_threads = ", n_threads))
+         print(paste("n_chains_sampling = ", n_chains_sampling))
+       }
        ##
        print(paste("n_params_main = ", n_params_main))
        
@@ -236,16 +240,16 @@ for (df_index in start_index:length(pilot_study_parallel_scaling_comp_list$N_vec
                    df_index <- which(pilot_study_opt_N_chunks_list$N_vec == N)
                    y <- y_binary_list[[df_index]]
                    ##
-                   str(Model_args_as_Rcpp_List$Model_args_2_later_vecs_of_mats_double)
+                   ## str(Model_args_as_Rcpp_List$Model_args_2_later_vecs_of_mats_double)
                    ##
                    ### Call C++ parallel sampling function * directly * (skip costly burn-in phase + out of scope for this paper)
                    RcppParallel::setThreadOptions(numThreads = n_chains_sampling);
-                   ##
-                   print(paste("theta_main_vectors_all_chains_input_from_R = "))
-                   print(str(theta_main_vectors_all_chains_input_from_R))
-                   ##
-                   print(paste("theta_us_vectors_all_chains_input_from_R = "))
-                   print(str(theta_us_vectors_all_chains_input_from_R))
+                   # ##
+                   # print(paste("theta_main_vectors_all_chains_input_from_R = "))
+                   # print(str(theta_main_vectors_all_chains_input_from_R))
+                   # ##
+                   # print(paste("theta_us_vectors_all_chains_input_from_R = "))
+                   # print(str(theta_us_vectors_all_chains_input_from_R))
                    ##
                    result <- BayesMVP:::Rcpp_fn_RcppParallel_EHMC_sampling(    n_threads_R = n_chains_sampling,
                                                                                sample_nuisance_R = sample_nuisance,
@@ -270,19 +274,32 @@ for (df_index in start_index:length(pilot_study_parallel_scaling_comp_list$N_vec
           
           if (algorithm == "Mplus_standard") {  ## i.e., n_threads = n_chains
             
-                n_threads <- n_threads
                 n_chains <- n_threads  
-                n_thin <- 2
+                n_thin <- 1 ## less thinning for this as it s generally slower than the WCP version
                 
-                ## BOOKMARK -- do stuff
+                run_model <- TRUE
             
-          } else if ((algorithm == "Mplus_WCP") && (parallel::detectCores() > 16)) {  ## i.e., n_threads > n_chains
+          } else if (algorithm == "Mplus_WCP") {  ## i.e., n_threads > n_chains
+      
+                if (computer == "Laptop") { 
+                  n_chains <- 4 
+                } else { 
+                  n_chains <- 8
+                }
             
-                n_threads <- n_threads
-                n_chains <- 4 ## 8 ## 8 whether on HPC or Laptop
+                ## NOTE: For WCO, we must have:  n_chains < n_threads, hence:
+                ## For Laptop, only run when n_threads is at least 8 (as 8/4 = 2 but 4/4 = 1)1
+                ## For Local_HPC, only run when n_threads is at least 16 (as 16/8 = 2 but 8/8 = 1)
+                ## Hence:
+                min_n_threads_to_run_WCP <- n_chains * 2
+                
                 n_thin <- 4
                 
-                ## BOOKMARK -- do stuff
+                if (n_threads > (min_n_threads_to_run_WCP - 1)) {
+                  run_model <- TRUE
+                } else { 
+                  run_model <- FALSE
+                }
                 
           }
             
@@ -291,32 +308,33 @@ for (df_index in start_index:length(pilot_study_parallel_scaling_comp_list$N_vec
          
            ##
            n_fb_iter <- N_iter
+           if (algorithm == "Mplus_standard") { 
+             n_fb_iter <- 0.5 * n_fb_iter ## half the iterations as standard one is slower!!
+           }
            N_total_iter <- n_thin * n_fb_iter
            ##
+           print(paste("n_threads (Mplus) = ", n_threads))
+           print(paste("n_chains (Mplus) = ", n_chains))
            print(paste("N_total_iter (Mplus) = ", N_total_iter))
            print(paste("n_thin (Mplus) = ", n_thin))
            print(paste("n_fb_iter (Mplus) = ", n_fb_iter))
            ##
            ##
-           Mplus_settings_outs <- R_fn_run_Mplus_model_LC_MVP(      run_model = TRUE,
+           Mplus_settings_outs <- R_fn_run_Mplus_model_LC_MVP(      run_model = run_model,
                                                                     computer = computer,
                                                                     Mplus_settings_list = Mplus_settings_list,
                                                                     global_list = global_list,
                                                                     N_sample_size_of_dataset = N,
                                                                     run_number = iii,
-                                                                    save_full_output = TRUE,
+                                                                    save_full_output = FALSE,
                                                                     save_output_directory =  output_path,
                                                                     compute_nested_rhat = NULL,
                                                                     MCMC_seed = seed,
-                                                                    n_chains = n_chains_sampling,
+                                                                    n_chains = n_chains,
                                                                     n_threads = n_threads,
                                                                     n_superchains = n_superchains,
                                                                     n_fb_iter = n_fb_iter,
                                                                     n_thin = n_thin)
-           
-            fb_iter <- 5 * N_iter
-            n_thin <- 1
-            ## fb_iter * n_thin
  
  
         }  # ----- end of " } else if (Mplus_ind == TRUE) { "
