@@ -9,54 +9,62 @@
 R_fn_ps_opt_N_chunks_plots <- function(     tibble_all_runs,
                                             pilot_study_opt_N_chunks_list,
                                             global_list,
-                                            output_path) { 
+                                            output_path,
+                                            plot_1_overall_scale_factor,
+                                            plot_1_width_scale_factor,
+                                            plot_1_height_scale_factor, 
+                                            plot_1_PPI,
+                                            plot_2_overall_scale_factor,
+                                            plot_2_width_scale_factor,
+                                            plot_2_height_scale_factor, 
+                                            plot_2_PPI) { 
       
-      # ## Set device
-      # pilot_study_opt_N_chunks_list$device <- computer
-      # print(paste("device = ", pilot_study_opt_N_chunks_list$device))
-      ## run type:
-      pilot_study_opt_N_chunks_list$run_type <- "ps1"
-      print(paste("run_type = ", pilot_study_opt_N_chunks_list$run_type))
-      
-      ## Set important variables:
-      n_thread_total_combos <- length(pilot_study_opt_N_chunks_list$n_threads_vec)
-      ##
-      n_max_chunk_combos <-  pilot_study_opt_N_chunks_list$n_max_chunk_combos 
-      ##
-      N_vec <- pilot_study_opt_N_chunks_list$N_vec
-      n_runs <- pilot_study_opt_N_chunks_list$n_runs
-      start_index <- pilot_study_opt_N_chunks_list$start_index
-      
-      ## Make array to store results:
-      times_array <- array(dim = c(length(N_vec), n_max_chunk_combos, n_runs, n_thread_total_combos))
-      str(times_array)
-      dimnames(times_array) <- list(N = c(500, 1000, 2500, 5000, 12500, 25000),
-                                    n_chunks_index = seq(from = 1, to = n_max_chunk_combos, by = 1),
-                                    run_number = seq(from = 1, to = n_runs, by = 1),
-                                    n_threads_index =   pilot_study_opt_N_chunks_list$n_threads_vec) 
-      
-      
-      ## Set key variables:
-      n_class <- global_list$Model_settings_list$n_class
-      n_tests <- global_list$Model_settings_list$n_tests
-      n_params_main <- global_list$Model_settings_list$n_params_main
-      n_corrs <-  global_list$Model_settings_list$n_corrs
-      n_covariates_total <-  global_list$Model_settings_list$n_covariates_total
-      n_nuisance_to_track <- 10 ## set to small number 
-      ##
-      pilot_study_opt_N_chunks_list$manual_gradients <- TRUE ## Using manual-gradient function !! (AD doesn't have "chunking")
-      ## Fixed # of * burnin * chains:
-      n_chains_burnin <- min(parallel::detectCores(), 8)
-      n_burnin <- 500
-      ##
-      sample_nuisance <- FALSE
-      partitioned_HMC <- FALSE
-      diffusion_HMC <- FALSE
-      Model_type <- "LC_MVP"
-      force_autodiff <- force_PartialLog <- FALSE
-      multi_attempts <- FALSE
-      metric_shape_main <- "dense"
-      ##
+      # # ## Set device
+      # # pilot_study_opt_N_chunks_list$device <- computer
+      # # print(paste("device = ", pilot_study_opt_N_chunks_list$device))
+      # ## run type:
+      # pilot_study_opt_N_chunks_list$run_type <- "ps1"
+      # print(paste("run_type = ", pilot_study_opt_N_chunks_list$run_type))
+      # 
+      # ## Set important variables:
+      # n_thread_total_combos <- length(pilot_study_opt_N_chunks_list$n_threads_vec)
+      # ##
+      # n_max_chunk_combos <-  pilot_study_opt_N_chunks_list$n_max_chunk_combos 
+      # ##
+      # N_vec <- pilot_study_opt_N_chunks_list$N_vec
+      # n_runs <- pilot_study_opt_N_chunks_list$n_runs
+      # start_index <- pilot_study_opt_N_chunks_list$start_index
+      # 
+      # ## Make array to store results:
+      # times_array <- array(dim = c(length(N_vec), n_max_chunk_combos, n_runs, n_thread_total_combos))
+      # str(times_array)
+      # dimnames(times_array) <- list(N = c(500, 1000, 2500, 5000, 12500, 25000),
+      #                               n_chunks_index = seq(from = 1, to = n_max_chunk_combos, by = 1),
+      #                               run_number = seq(from = 1, to = n_runs, by = 1),
+      #                               n_threads_index =   pilot_study_opt_N_chunks_list$n_threads_vec) 
+      # 
+      # 
+      # ## Set key variables:
+      # n_class <- global_list$Model_settings_list$n_class
+      # n_tests <- global_list$Model_settings_list$n_tests
+      # n_params_main <- global_list$Model_settings_list$n_params_main
+      # n_corrs <-  global_list$Model_settings_list$n_corrs
+      # n_covariates_total <-  global_list$Model_settings_list$n_covariates_total
+      # n_nuisance_to_track <- 10 ## set to small number 
+      # ##
+      # pilot_study_opt_N_chunks_list$manual_gradients <- TRUE ## Using manual-gradient function !! (AD doesn't have "chunking")
+      # ## Fixed # of * burnin * chains:
+      # n_chains_burnin <- min(parallel::detectCores(), 8)
+      # n_burnin <- 500
+      # ##
+      # sample_nuisance <- FALSE
+      # partitioned_HMC <- FALSE
+      # diffusion_HMC <- FALSE
+      # Model_type <- "LC_MVP"
+      # force_autodiff <- force_PartialLog <- FALSE
+      # multi_attempts <- FALSE
+      # metric_shape_main <- "dense"
+      # ##
       
       
       tibble_all_runs_avg <-  tibble_all_runs %>%
@@ -146,10 +154,10 @@ R_fn_ps_opt_N_chunks_plots <- function(     tibble_all_runs,
       plot_1_outs <- R_fn_plot_ps_N_chunks_make_ggplot_1(    tibble_all_runs_avg = tibble_all_runs_avg,
                                                              device = "HPC",
                                                              save_plot = TRUE,
-                                                             plot_overall_scale_factor = 4,
-                                                             plot_width_scale_factor = 4,
-                                                             plot_height_scale_factor = 3, 
-                                                             plot_PPI = 400,
+                                                             plot_overall_scale_factor = plot_1_overall_scale_factor,
+                                                             plot_width_scale_factor =   plot_1_width_scale_factor,
+                                                             plot_height_scale_factor =  plot_1_height_scale_factor, 
+                                                             plot_PPI = plot_1_PPI,
                                                              output_path =     pilot_study_opt_N_chunks_list$output_path )
       ##
       plot_panel_1_opt_N_chunks_at_the_every_tested_thread_count  <- plot_1_outs$plot
@@ -195,10 +203,10 @@ R_fn_ps_opt_N_chunks_plots <- function(     tibble_all_runs,
                                                         chosen_n_threads_HPC = chosen_n_threads_HPC,
                                                         chosen_n_threads_Laptop = chosen_n_threads_Laptop,
                                                         save_plot = TRUE,
-                                                        plot_overall_scale_factor = 4,
-                                                        plot_width_scale_factor = 4,
-                                                        plot_height_scale_factor = 3, 
-                                                        plot_PPI = 400,
+                                                        plot_overall_scale_factor = plot_2_overall_scale_factor,
+                                                        plot_width_scale_factor =   plot_2_width_scale_factor,
+                                                        plot_height_scale_factor =  plot_2_height_scale_factor, 
+                                                        plot_PPI = plot_2_PPI,
                                                         output_path =     pilot_study_opt_N_chunks_list$output_path )
       ##
       df_subset_at_chosen_n_threads  <- plot_2_outs$df_subset_at_chosen_n_threads

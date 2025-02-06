@@ -62,6 +62,10 @@ R_fn_make_df_ps_opt_N_chunks_given_computer <- function(  pilot_study_opt_N_chun
 
 
 
+
+
+
+
 R_fn_make_df_ps_opt_N_chunks <- function(    pilot_study_opt_N_chunks_list,
                                              n_threads_vec_for_Local_HPC,
                                              n_threads_vec_for_Laptop
@@ -90,145 +94,136 @@ R_fn_make_df_ps_opt_N_chunks <- function(    pilot_study_opt_N_chunks_list,
   
  
  
-# dataset_index <- 1
-# n_threads_index <- 1
-# n_chunks_index <- 1
-# n_runs_index <- 1
 
+
+R_fn_add_res_to_df_ps_opt_N_chunks_helper_fn <- function( pilot_study_opt_N_chunks_list, 
+                                                          tibble_skeleton,
+                                                          computer
+) {
+  
+        {
+          if (computer == "Laptop") { 
+            n_threads_vec <- pilot_study_opt_N_chunks_list$n_threads_vec_for_Laptop 
+          } else { 
+            n_threads_vec <- pilot_study_opt_N_chunks_list$n_threads_vec_for_Local_HPC
+          }     
+          ##
+          n_thread_total_combos <- length(n_threads_vec)
+          ##
+          row_index <- 0 
+          ##
+        }
+        
+        {
+          ##
+          for (dataset_index in 1:length(N_vec)) {
+            
+            N <- N_vec[dataset_index]
+            ## Load the RDS file:
+            {
+              pilot_study_opt_N_chunks_list$output_path <- file.path(  getwd(), 
+                                                                       "1_appendix_pilot_studies",
+                                                                       "ps_1_optimizing_N_chunks_and_N_threads",
+                                                                       "outputs")
+              file_name <- paste0("determining_optimal_N_chunks_ps", "_N", N)
+              if (computer == "Laptop") { 
+                    file_name <- paste0("Laptop_",    file_name, "_n_runs", n_runs)
+              } else { 
+                    attempt_success <- FALSE
+                    try({ 
+                      file_name <- paste0("HPC_",    file_name, "_n_runs", n_runs)
+                      attempt_success <- TRUE
+                    })
+                    if (attempt_success == FALSE) {
+                      file_name <- paste0("Local_HPC_",    file_name, "_n_runs", n_runs)
+                      attempt_success <- TRUE
+                    }
+              }   
+              ## Path:
+              file_path <- file.path(pilot_study_opt_N_chunks_list$output_path, file_name)
+              ## Load file: 
+              array_given_N <- readRDS(file_path)
+            }
+            ##
+            n_chunks_vec_given_N <- pilot_study_opt_N_chunks_list$n_chunks_vecs[[as.character(N)]]
+            n_chunks_combos_given_N <- length(n_chunks_vec_given_N)
+            ##
+            for (n_runs_index in 1:n_runs) {
+              ##
+              run_number_given_N <- n_runs_index
+              ##
+              for (n_threads_index in 1:n_thread_total_combos) {
+                ##
+                for (n_chunks_index in 1:n_chunks_combos_given_N)  {
+                  ##
+                  row_index <- row_index + 1
+                  ##
+                  time_sec <- array_given_N[n_chunks_index, n_runs_index, n_threads_index]
+                  ##
+                  tibble_skeleton[row_index, ]$time_sec <- time_sec
+                }
+              }
+            }
+          }
+        }
+  
+  return(tibble_skeleton)
+  
+}
+
+
+
+
+
+
+ 
 
 R_fn_add_res_to_df_ps_opt_N_chunks <- function(    pilot_study_opt_N_chunks_list,
                                                    output_path,
-                                                   tibble_skeleton,
-                                                   n_threads_vec_for_Local_HPC,
-                                                   n_threads_vec_for_Laptop
+                                                   tibble_skeleton
 ) { 
   
-      ## Important variables:
-      n_rows <- nrow(tibble_skeleton)
-      tibble_skeleton <- tibble_skeleton %>% dplyr::mutate(time_sec = rep(NA, n_rows), 
-                                                           row_num = seq(from = 1, to = n_rows, by = 1))
-      ##
-      n_max_chunk_combos <- pilot_study_opt_N_chunks_list$n_max_chunk_combos
-      N_vec <- pilot_study_opt_N_chunks_list$N_vec
-      ##
-      n_runs <- pilot_study_opt_N_chunks_list$n_runs
-      ##
-     
-      ## For Laptop:
-      ##
-      n_threads_vec <- n_threads_vec_for_Laptop
-      n_thread_total_combos <- length(n_threads_vec)
-      ##
-      for (dataset_index in 1:length(N_vec)) {
-        
-        N <- N_vec[dataset_index]
-        ## Load the RDS file:
-        {
-          pilot_study_opt_N_chunks_list$output_path <- file.path(  getwd(), 
-                                                                   "1_appendix_pilot_studies",
-                                                                   "ps_1_optimizing_N_chunks_and_N_threads",
-                                                                   "outputs")
-          file_name <- paste0("determining_optimal_N_chunks_ps", "_N", N)
-          file_name <- paste0("Laptop_",    file_name, "_n_runs", n_runs)
-          ## Path:
-          file_path <- file.path(pilot_study_opt_N_chunks_list$output_path, file_name)
-          ## Load file: 
-          array_given_N <- readRDS(file_path)
-        }
+  
+      ## 
+      {
+        tibble_all_runs_skeleton_Laptop <- tibble_all_runs_skeleton %>% dplyr::filter(device == "Laptop")   %>% 
+          dplyr::group_by(N, n_threads, n_chunks) %>% 
+          print(n = 10)
         ##
-        n_chunks_vec_given_N <- pilot_study_opt_N_chunks_list$n_chunks_vecs[[as.character(N)]]
-        n_chunks_combos_given_N <- length(n_chunks_vec_given_N)
+        tibble_all_runs_skeleton_HPC <- tibble_all_runs_skeleton %>% dplyr::filter(device == "HPC") %>% 
+          dplyr::group_by(N, n_threads, n_chunks) %>% 
+          print(n = 10)
         ##
-        for (n_chunks_index in 1:n_chunks_combos_given_N)  {
-              ##
-              n_chunks_given_N <- n_chunks_vec_given_N[n_chunks_index]
-              ##
-              for (n_runs_index in 1:n_runs) {
-                    ##
-                    run_number_given_N <- n_runs_index
-                    ##
-                    for (n_threads_index in 1:n_thread_total_combos) {
-                        ##
-                        n_threads_given_N <- n_threads_vec[n_threads_index]
-                        ##
-                        time_sec <- array_given_N[n_chunks_index, n_runs_index, n_threads_index]
-                       ##   row_index <- 
-                        ## tibble_skeleton$N <- as.numeric(tibble_skeleton$N)
-                        row <- tibble_skeleton %>% dplyr::filter( 
-                                                           df_index == dataset_index,
-                                                           n_chunks == n_chunks_given_N,
-                                                           run_number == run_number_given_N,
-                                                           n_threads == n_threads_given_N,
-                                                           device == "Laptop"
-                        )
-                        row_index <- row$row_num
-                        tibble_skeleton[row_index,]$time_sec <- time_sec
-                    }
-                
-              }
-          
-        }
-      }
- 
-      
-      ## For HPC:
-      ##
-      n_threads_vec <- n_threads_vec_for_Local_HPC
-      n_thread_total_combos <- length(n_threads_vec)
-      ##
-      for (dataset_index in 1:length(N_vec)) {
-        
-        N <- N_vec[dataset_index]
-        ## Load the RDS file:
-        {
-          pilot_study_opt_N_chunks_list$output_path <- file.path(  getwd(), 
-                                                                   "1_appendix_pilot_studies",
-                                                                   "ps_1_optimizing_N_chunks_and_N_threads",
-                                                                   "outputs")
-          file_name <- paste0("determining_optimal_N_chunks_ps", "_N", N)
-          file_name <- paste0("HPC_",    file_name, "_n_runs", n_runs)
-          ## Path:
-          file_path <- file.path(pilot_study_opt_N_chunks_list$output_path, file_name)
-          ## Load file: 
-          array_given_N <- readRDS(file_path)
-        }
+        ## Important variables:
+        tibble_all_runs_skeleton_HPC$time_sec <- rep(NA, nrow(tibble_all_runs_skeleton_HPC))
+        tibble_all_runs_skeleton_Laptop$time_sec <- rep(NA, nrow(tibble_all_runs_skeleton_Laptop))
         ##
-        n_chunks_vec_given_N <- pilot_study_opt_N_chunks_list$n_chunks_vecs[[as.character(N)]]
-        n_chunks_combos_given_N <- length(n_chunks_vec_given_N)
+        n_max_chunk_combos <- pilot_study_opt_N_chunks_list$n_max_chunk_combos
+        N_vec <- pilot_study_opt_N_chunks_list$N_vec
         ##
-        for (n_chunks_index in 1:n_chunks_combos_given_N)  {
-          ##
-          n_chunks_given_N <- n_chunks_vec_given_N[n_chunks_index]
-          ##
-          for (n_runs_index in 1:n_runs) {
-            ##
-            run_number_given_N <- n_runs_index
-            ##
-            for (n_threads_index in 1:n_thread_total_combos) {
-              ##
-              n_threads_given_N <- n_threads_vec[n_threads_index]
-              ##
-              time_sec <- array_given_N[n_chunks_index, n_runs_index, n_threads_index]
-              ##   row_index <- 
-              ## tibble_skeleton$N <- as.numeric(tibble_skeleton$N)
-              row <- tibble_skeleton %>% dplyr::filter( 
-                df_index == dataset_index,
-                n_chunks == n_chunks_given_N,
-                run_number == run_number_given_N,
-                n_threads == n_threads_given_N,
-                device == "HPC"
-              )
-              row_index <- row$row_num
-              tibble_skeleton[row_index,]$time_sec <- time_sec
-            }
-            
-          }
-          
-        }
+        n_runs <- pilot_study_opt_N_chunks_list$n_runs
+        ##
+        output_path <- pilot_study_opt_N_chunks_list$output_path
       }
       
+      ## For laptop:
+      tibble_all_runs_skeleton_Laptop <- R_fn_add_res_to_df_ps_opt_N_chunks_helper_fn( pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list,
+                                                                                       tibble_skeleton = tibble_all_runs_skeleton_Laptop,
+                                                                                       computer = "Laptop")
       
-      return(tibble_skeleton)
+      ## For Local_HPC:
+      tibble_all_runs_skeleton_HPC <- R_fn_add_res_to_df_ps_opt_N_chunks_helper_fn(    pilot_study_opt_N_chunks_list = pilot_study_opt_N_chunks_list,
+                                                                                       tibble_skeleton = tibble_all_runs_skeleton_HPC,
+                                                                                       computer = "HPC")
+  
+
+      
+      ## bind the tibbles:
+      tibble_list <- list(tibble_all_runs_skeleton_Laptop, 
+                          tibble_all_runs_skeleton_HPC)
+      tibble_all_runs_skeleton <- tibble(data.table::rbindlist(tibble_list))
+      
+      return(tibble_all_runs_skeleton)
   
   
 }

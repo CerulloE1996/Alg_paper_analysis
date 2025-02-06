@@ -6,10 +6,10 @@
 R_fn_plot_ps_N_chunks_make_ggplot_1 <- function(tibble_all_runs_avg, 
                                                 device,
                                                 save_plot = TRUE,
-                                                plot_overall_scale_factor = 4,
-                                                plot_width_scale_factor = 4,
-                                                plot_height_scale_factor = 3,
-                                                plot_PPI = 400,
+                                                plot_overall_scale_factor,
+                                                plot_width_scale_factor,
+                                                plot_height_scale_factor,
+                                                plot_PPI,
                                                 output_path) {
  
   
@@ -54,7 +54,6 @@ R_fn_plot_ps_N_chunks_make_ggplot_1 <- function(tibble_all_runs_avg,
           
           
           
-          
           { ## -------- plot 1: panel (b) ----  Panel for N = {5000, 12500, 25000}
             
                   print(paste("Plot for Laptop data"))
@@ -94,23 +93,23 @@ R_fn_plot_ps_N_chunks_make_ggplot_1 <- function(tibble_all_runs_avg,
           
           ## save plot:
           {
-            {
-              plot_width <-  plot_width_scale_factor* plot_overall_scale_factor
-              plot_height <- plot_height_scale_factor*plot_overall_scale_factor
-            }
-            ##
-            file_name <- file.path(output_path, "Figure_N_chunks_pilot_study_plot_1.png")
-            ##
-            png(filename = file_name, 
-                units = "in", 
-                width = plot_width, 
-                height =  plot_height, 
-                res = plot_PPI)
-            ##
-            plot
-            ##
-            dev.off()
-            ##
+              {
+                plot_width <-  plot_width_scale_factor *  plot_overall_scale_factor
+                plot_height <- plot_height_scale_factor * plot_overall_scale_factor
+              }
+              ##
+              file_name <- file.path(output_path, "Figure_N_chunks_pilot_study_plot_1.png")
+              ##
+              png(filename = file_name, 
+                  units = "in", 
+                  width = plot_width, 
+                  height =  plot_height, 
+                  res = plot_PPI)
+              ##
+              print(plot)
+              ##
+              dev.off()
+              ##
           }
           
           

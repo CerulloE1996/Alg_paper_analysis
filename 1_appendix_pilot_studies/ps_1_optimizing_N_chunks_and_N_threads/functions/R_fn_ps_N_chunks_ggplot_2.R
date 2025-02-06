@@ -7,10 +7,10 @@ R_fn_plot_ps_N_chunks_make_ggplot_2 <- function(tibble_all_runs_avg,
                                                 chosen_n_threads_HPC,
                                                 chosen_n_threads_Laptop, 
                                                 save_plot = TRUE,
-                                                plot_overall_scale_factor = 4,
-                                                plot_width_scale_factor = 4,
-                                                plot_height_scale_factor = 3,
-                                                plot_PPI = 400,
+                                                plot_overall_scale_factor,
+                                                plot_width_scale_factor,
+                                                plot_height_scale_factor,
+                                                plot_PPI,
                                                 output_path) {
   
   
@@ -114,7 +114,7 @@ R_fn_plot_ps_N_chunks_make_ggplot_2 <- function(tibble_all_runs_avg,
               plot_height <- plot_height_scale_factor*plot_overall_scale_factor
             }
             ##
-            file_name <- file.path(output_path, "Figure_N_chunks_pilot_study_plot_1.png")
+            file_name <- file.path(output_path, "Figure_N_chunks_pilot_study_plot_2.png")
             ##
             png(filename = file_name, 
                 units = "in", 
@@ -122,7 +122,7 @@ R_fn_plot_ps_N_chunks_make_ggplot_2 <- function(tibble_all_runs_avg,
                 height =  plot_height, 
                 res = plot_PPI)
             ##
-            plot
+            print(plot)
             ##
             dev.off()
             ##
