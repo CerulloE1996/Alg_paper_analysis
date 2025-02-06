@@ -417,7 +417,7 @@ R_fn_run_Mplus_model_LC_MVP <- function(     run_model,
                           Min_ESS_per_sec_pb_time <- Min_ESS_per_sec_total_time * 2
                           
                           file_list <- list(
-                            mplus_max_rhat, round(max(mplus_max_rhat),3),
+                            mplus_max_rhat, round(max(mplus_max_rhat), 3),
                             mplus_max_n_rhat,
                             mplus_min_ess,
                             ##
