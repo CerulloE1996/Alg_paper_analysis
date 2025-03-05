@@ -8,7 +8,6 @@ simulate_binary_LC_MVP_data <- function( N_vec = c(500, 1000, 2500, 5000, 12500,
                                          seed = 123,
                                          DGP = 5) {
   
-  N_datasets <- length(N_vec)
   n_tests <- 5 # fixed to 5
   
   ## set the seed (keep this OUTSIDE the N loop):
@@ -113,8 +112,8 @@ simulate_binary_LC_MVP_data <- function( N_vec = c(500, 1000, 2500, 5000, 12500,
                         
                       }
                       
-                      L_Sigma_d  = t(chol(Sigma_d)) # PD check (fails if not PD)
-                      L_Sigma_nd  = t(chol(Sigma_nd)) # PD check (fails if not PD)
+                      L_Sigma_d  <-  t(chol(Sigma_d)) # PD check (fails if not PD)
+                      L_Sigma_nd  <- t(chol(Sigma_nd)) # PD check (fails if not PD)
                       
                       true_prev <- 0.20 # low-ish prevalence (quite common in diagnostic/screening test studies to have <25% prevalence)
                       #### true_prev <- 0.40 # high (relatively) prevalence (same prev. used in Wang et al, 2017)
@@ -202,26 +201,9 @@ simulate_binary_LC_MVP_data <- function( N_vec = c(500, 1000, 2500, 5000, 12500,
                       true_estimates_observed_list[[ii_dataset]] <- true_estimates_observed
                       observed_cell_counts_list[[ii_dataset]] <- observed_cell_counts
               
-          
-            
-            # if (N == 500)   y_master_list_seed_123_datasets[[1]] <- y_list[[123]]
-            # if (N == 1000)  y_master_list_seed_123_datasets[[2]] <- y_list[[123]]
-            # if (N == 2500)  y_master_list_seed_123_datasets[[3]] <- y_list[[123]]
-            # if (N == 5000)  y_master_list_seed_123_datasets[[4]] <- y_list[[123]]
-            # if (N == 12500) y_master_list_seed_123_datasets[[5]] <- y_list[[123]]
-            # if (N == 25000) y_master_list_seed_123_datasets[[6]] <- y_list[[123]]
     
   }
   
-  
-  # # assess sparsity in D- class
-  # {
-  #   print((sum(df_neg[,1]$results[,1]) / length(df_neg[,1]$results[,1]) ) *100)
-  #   print((sum(df_neg[,1]$results[,2]) / length(df_neg[,1]$results[,1]) ) *100)
-  #   print((sum(df_neg[,1]$results[,3]) / length(df_neg[,1]$results[,1]) ) *100)
-  #   print((sum(df_neg[,1]$results[,4]) / length(df_neg[,1]$results[,1]) ) *100)
-  #   print((sum(df_neg[,1]$results[,5]) / length(df_neg[,1]$results[,1]) ) *100)
-  # }
   
       return(list(
                     y_binary_list = y_binary_list,

@@ -3,27 +3,27 @@
 #### ------- R function to compile Stan model  ------------------------------------------------------------------------------------------------------------------------------
      
     
-# #### For testing:
-# # BayesMVP_Model_type = "LC_MVP"
-# BayesMVP_Model_type = "Stan"
-# ##
-# global_list = global_list
-# ## Stan_data_list = NULL
-# Stan_model_file_path = NULL
+# # #### For testing:
+# # # BayesMVP_Model_type = "LC_MVP"
+# # BayesMVP_Model_type = "Stan"
+# # ##
+# # global_list = global_list
+# # ## Stan_data_list = NULL
+# # Stan_model_file_path = NULL
 # N_sample_size_of_dataset = 500
-# sample_nuisance = TRUE
-# set_custom_CXX_CPP_flags_if_using_Stan_model = TRUE
-# CCACHE_PATH = " "
-# # user_home_dir = NULL
-# # user_BayesMVP_dir = NULL
-# CXX_COMPILER_PATH = NULL
-# CPP_COMPILER_PATH = NULL
-# MATH_FLAGS = NULL
-# AVX_FLAGS = NULL
-# FMA_FLAGS = NULL
-# n_chains_burnin = 8
-
-
+# # sample_nuisance = TRUE
+# # set_custom_CXX_CPP_flags_if_using_Stan_model = TRUE
+# # CCACHE_PATH = " "
+# # # user_home_dir = NULL
+# # # user_BayesMVP_dir = NULL
+# # CXX_COMPILER_PATH = NULL
+# # CPP_COMPILER_PATH = NULL
+# # MATH_FLAGS = NULL
+# # AVX_FLAGS = NULL
+# # FMA_FLAGS = NULL
+# # n_chains_burnin = 8
+# 
+# 
 
 
 R_fn_compile_BayesMVP_model <- function(  BayesMVP_Model_type, 
@@ -44,8 +44,8 @@ R_fn_compile_BayesMVP_model <- function(  BayesMVP_Model_type,
                                           AVX_FLAGS = NULL,
                                           n_chains_burnin = min(8, parallel::detectCores()) ## Dummy/can change later but needed for compilation
                                           )  {
-  
-                    
+
+
           N_sample_sizes_vec <- global_list$N_sample_sizes_vec
           ## total_num_datasets <- length(N_sample_sizes_vec)
           ## Get data frame index (e.g. for this study if N = 500 then df_index = 1,)
@@ -215,8 +215,8 @@ R_fn_compile_BayesMVP_model <- function(  BayesMVP_Model_type,
                                                       num_chunks =   num_chunks,
                                                       prior_coeffs_mean_mat = prior_beta_mean,
                                                       prior_coeffs_sd_mat =    prior_beta_sd, 
-                                                      prior_p_alpha = prior_p_alpha,  
-                                                      prior_p_beta = prior_p_beta,
+                                                      prev_prior_a = prior_p_alpha,  
+                                                      prev_prior_b = prior_p_beta,
                                                       corr_force_positive = corr_force_positive)
                 
                       ## Compile BayesMVP model:
