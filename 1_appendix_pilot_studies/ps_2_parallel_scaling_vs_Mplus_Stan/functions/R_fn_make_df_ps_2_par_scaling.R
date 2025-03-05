@@ -183,6 +183,10 @@ R_fn_add_res_to_df_ps_par_scaling_helper_fn <- function(  pilot_study_parallel_s
     ##
   }
   
+  
+  N_vec <-   pilot_study_parallel_scaling_comp_list$N_vec
+  n_runs <-   pilot_study_parallel_scaling_comp_list$n_runs
+  
   {
     ##
     for (dataset_index in 1:length(N_vec)) {
@@ -195,7 +199,7 @@ R_fn_add_res_to_df_ps_par_scaling_helper_fn <- function(  pilot_study_parallel_s
         file_name <- paste0("parallel_scalability_ps", "_",
                             "algorithm", algorithm, "_",
                             "N", N, "_",
-                            "n_runs", pilot_study_parallel_scaling_comp_list$n_runs)
+                            "n_runs", n_runs)
         ##
         if (computer == "Laptop") { 
           file_name <- paste0("Laptop_",    file_name)

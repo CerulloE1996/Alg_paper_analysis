@@ -96,7 +96,7 @@ R_fn_RUN_ps_parallel_scaling_comp <- function(     pilot_study_parallel_scaling_
       
     }
     
-    df_index = 1
+   ##   df_index = 1
     
 ## -----------------------
 for (df_index in start_index:length(pilot_study_parallel_scaling_comp_list$N_vec[!is.na(pilot_study_parallel_scaling_comp_list$N_vec)]))  {
