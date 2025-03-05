@@ -113,7 +113,10 @@ R_fn_add_res_to_df_ps_opt_N_chunks_helper_fn <- function( pilot_study_opt_N_chun
           row_index <- 0 
           ##
         }
-        
+  
+         N_vec <-   pilot_study_opt_N_chunks_list$N_vec
+         n_runs <-   pilot_study_opt_N_chunks_list$n_runs
+         
         {
           ##
           for (dataset_index in 1:length(N_vec)) {

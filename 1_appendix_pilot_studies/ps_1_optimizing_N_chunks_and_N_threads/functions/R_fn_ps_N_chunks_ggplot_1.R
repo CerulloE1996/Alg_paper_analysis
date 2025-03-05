@@ -4,7 +4,6 @@
 # -| ------------------------------    Pilot study - Finding the optimal N_{chunks} (for each N_{thread} and N) for BayesMVP --------------------------------------------------------------------
 
 R_fn_plot_ps_N_chunks_make_ggplot_1 <- function(tibble_all_runs_avg, 
-                                                device,
                                                 save_plot = TRUE,
                                                 plot_overall_scale_factor,
                                                 plot_width_scale_factor,

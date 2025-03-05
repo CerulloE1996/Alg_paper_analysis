@@ -68,7 +68,7 @@ R_fn_ps_opt_N_chunks_plots <- function(     tibble_all_runs,
       
       
       tibble_all_runs_avg <-  tibble_all_runs %>%
-                              dplyr::group_by(df_index, N, n_chunks, n_threads, n_iter, device) %>%
+                              dplyr::group_by(device, df_index, N, n_threads, n_chunks, n_iter) %>%
                               dplyr::summarise( time_mean = mean(time_sec, na.rm = TRUE),
                                                 time_median = median(time_sec, na.rm = TRUE),
                                                 time_SD = sd(time_sec, na.rm = TRUE),
@@ -152,7 +152,6 @@ R_fn_ps_opt_N_chunks_plots <- function(     tibble_all_runs,
       ## NOTE: This is a plot of N_{chunks} vs. time (in sec) for all N at ** ALL ** OF THE TESTED N_{threads} for each device 
       ## (64 for HPC, and either 8 or 16 for Laptop). 
       plot_1_outs <- R_fn_plot_ps_N_chunks_make_ggplot_1(    tibble_all_runs_avg = tibble_all_runs_avg,
-                                                             device = "HPC",
                                                              save_plot = TRUE,
                                                              plot_overall_scale_factor = plot_1_overall_scale_factor,
                                                              plot_width_scale_factor =   plot_1_width_scale_factor,
@@ -199,15 +198,15 @@ R_fn_ps_opt_N_chunks_plots <- function(     tibble_all_runs,
       ##  ----------------- Make + save "plot 2"  ------------------------------------------------------------------------------------------------------------------
       ## NOTE: This is a plot of N_{chunks} vs. time (in sec) for all N at the ** CHOSEN ** (i.e., the "optimal") # OF THREADS for each device 
       ## (64 for HPC, and either 8 or 16 for Laptop). 
-      plot_2_outs <- R_fn_plot_ps_N_chunks_make_ggplot_2(    tibble_all_runs_avg = tibble_all_runs_avg,
-                                                        chosen_n_threads_HPC = chosen_n_threads_HPC,
-                                                        chosen_n_threads_Laptop = chosen_n_threads_Laptop,
-                                                        save_plot = TRUE,
-                                                        plot_overall_scale_factor = plot_2_overall_scale_factor,
-                                                        plot_width_scale_factor =   plot_2_width_scale_factor,
-                                                        plot_height_scale_factor =  plot_2_height_scale_factor, 
-                                                        plot_PPI = plot_2_PPI,
-                                                        output_path =     pilot_study_opt_N_chunks_list$output_path )
+      plot_2_outs <- R_fn_plot_ps_N_chunks_make_ggplot_2(   tibble_all_runs_avg = tibble_all_runs_avg,
+                                                            chosen_n_threads_HPC = chosen_n_threads_HPC,
+                                                            chosen_n_threads_Laptop = chosen_n_threads_Laptop,
+                                                            save_plot = TRUE,
+                                                            plot_overall_scale_factor = plot_2_overall_scale_factor,
+                                                            plot_width_scale_factor =   plot_2_width_scale_factor,
+                                                            plot_height_scale_factor =  plot_2_height_scale_factor, 
+                                                            plot_PPI = plot_2_PPI,
+                                                            output_path =     pilot_study_opt_N_chunks_list$output_path )
       ##
       df_subset_at_chosen_n_threads  <- plot_2_outs$df_subset_at_chosen_n_threads
       tibble_all_runs_avg_subset_1  <-  plot_2_outs$tibble_all_runs_avg_subset_1
